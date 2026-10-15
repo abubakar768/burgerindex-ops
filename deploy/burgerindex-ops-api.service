@@ -1,0 +1,16 @@
+[Unit]
+Description=burgerindex-ops API
+After=network.target
+
+[Service]
+User=arslan
+WorkingDirectory=/home/arslan/arslan/projects/burgerindex-ops
+EnvironmentFile=/home/arslan/arslan/projects/burgerindex-ops/.env
+ExecStart=/home/arslan/arslan/projects/burgerindex-ops/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8090
+Restart=always
+# Crawls started by the Run button are children of this service.
+# KillMode=process makes a restart/deploy stop only the API, not those crawls.
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

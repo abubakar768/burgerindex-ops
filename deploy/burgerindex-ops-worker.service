@@ -1,0 +1,14 @@
+[Unit]
+Description=burgerindex-ops worker (autofix, P0 watch)
+After=network.target redis.service
+
+[Service]
+User=arslan
+WorkingDirectory=/home/arslan/arslan/projects/burgerindex-ops
+EnvironmentFile=/home/arslan/arslan/projects/burgerindex-ops/.env
+ExecStart=/home/arslan/arslan/projects/burgerindex-ops/venv/bin/celery -A worker.celery_app worker -B -Q burgerindex-ops -c 2 --loglevel=INFO
+Restart=always
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
