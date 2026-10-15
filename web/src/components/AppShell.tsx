@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { isSignedIn, useSession } from './Providers';
 import { Gate } from './Gate';
+import { ThemeToggle } from './ThemeToggle';
 import s from './ui.module.css';
 
 /**
@@ -23,9 +24,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           Signed in as <strong>{session.user}</strong>
           {session.base ? ` · API ${session.base}` : ' · API on this origin'}
         </span>
-        <button type="button" className={s.linkBtn} onClick={signOut}>
-          Sign out
-        </button>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <ThemeToggle />
+          <button type="button" className={s.linkBtn} onClick={signOut}>
+            Sign out
+          </button>
+        </span>
       </footer>
     </div>
   );

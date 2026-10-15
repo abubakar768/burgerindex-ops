@@ -15,6 +15,13 @@ const ICON_PATHS = {
   check: ['M5 12l5 5 9-10'],
   cross: ['M6 6l12 12', 'M18 6L6 18'],
   spinner: ['M12 3a9 9 0 1 0 9 9'],
+  sun: [
+    'M12 4V2', 'M12 22v-2', 'M4 12H2', 'M22 12h-2',
+    'M6.3 6.3L4.9 4.9', 'M19.1 19.1l-1.4-1.4',
+    'M17.7 6.3l1.4-1.4', 'M4.9 19.1l1.4-1.4',
+    'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+  ],
+  moon: ['M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z'],
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

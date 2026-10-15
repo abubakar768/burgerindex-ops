@@ -8,6 +8,7 @@ import {
   EMPTY_SESSION, clearSession, isSignedIn, readSession, setActiveSession, writeSession,
   type Session,
 } from '@/lib/session';
+import { DEFAULT_THEME, applyTheme, readTheme, writeTheme, type Theme } from '@/lib/theme';
 import { cx } from './Primitives';
 import s from './ui.module.css';
 
@@ -29,6 +30,22 @@ const SessionContext = createContext<SessionContextValue>({
 
 export function useSession(): SessionContextValue {
   return useContext(SessionContext);
+}
+
+/* ----------------------------------------------------------------- theme -- */
+
+interface ThemeContextValue {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: DEFAULT_THEME,
+  toggleTheme: () => {},
+});
+
+export function useTheme(): ThemeContextValue {
+  return useContext(ThemeContext);
 }
 
 /* ---------------------------------------------------------------- toasts -- */
@@ -53,6 +70,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>(EMPTY_SESSION);
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const seq = useRef(0);
 
   // localStorage is only available after mount, so the first paint is neutral.
@@ -61,6 +79,18 @@ export function Providers({ children }: { children: ReactNode }) {
     setActiveSession(stored);
     setSession(stored);
     setReady(true);
+    // The inline script in <head> already set the attribute; this syncs React
+    // to whatever it chose, so the toggle starts on the right label.
+    setTheme(readTheme());
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => {
+      const next: Theme = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      writeTheme(next);
+      return next;
+    });
   }, []);
 
   const signIn = useCallback((next: Session) => {
@@ -88,8 +118,11 @@ export function Providers({ children }: { children: ReactNode }) {
     [session, ready, signIn, signOut],
   );
 
+  const themeValue = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+
   return (
     <SessionContext.Provider value={sessionValue}>
+      <ThemeContext.Provider value={themeValue}>
       <ToastContext.Provider value={pushToast}>
         {children}
         <div className={s.toasts} aria-live="polite">
@@ -103,6 +136,7 @@ export function Providers({ children }: { children: ReactNode }) {
           ))}
         </div>
       </ToastContext.Provider>
+      </ThemeContext.Provider>
     </SessionContext.Provider>
   );
 }

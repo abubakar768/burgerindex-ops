@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { setActiveSession } from '@/lib/session';
 import { useSession } from './Providers';
 import { Button } from './Primitives';
+import { ThemeToggle } from './ThemeToggle';
 import s from './ui.module.css';
 
 /**
@@ -53,11 +54,14 @@ export function Gate() {
   return (
     <div className={s.gate}>
       <form className={s.gateCard} onSubmit={onSubmit}>
-        <div>
-          <div className={s.eyebrow}>BURGERINDEX-OPS</div>
-          <h1 className={s.title} style={{ fontSize: 24, lineHeight: '32px', marginTop: 6 }}>
-            Crawler operations
-          </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+          <div>
+            <div className={s.eyebrow}>BURGERINDEX-OPS</div>
+            <h1 className={s.title} style={{ fontSize: 24, lineHeight: '32px', marginTop: 6 }}>
+              Crawler operations
+            </h1>
+          </div>
+          <ThemeToggle />
         </div>
 
         <div className={s.gateField}>

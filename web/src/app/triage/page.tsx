@@ -94,7 +94,7 @@ export default function TriagePage() {
           tone="warn"
           icon="warnTriangle"
           title={`P0 crawlers: ${Math.max(0, p0Total - stats.p0.length)} of ${p0Total} on time`}
-          detail={`${stats.p0.length} P0 crawler${stats.p0.length === 1 ? '' : 's'} need attention: ${stats.p0.map((r) => r.crawler).join(', ')}`}
+          detail={`${stats.p0.length} P0 crawler${stats.p0.length === 1 ? ' needs' : 's need'} attention: ${stats.p0.map((r) => r.crawler).join(', ')}`}
         />
       );
 
@@ -189,7 +189,7 @@ export default function TriagePage() {
             <TriageTableRow
               key={`${row.crawler}-${row.jobId ?? row.category}`}
               row={row}
-              busy={queueing === row.jobId}
+              busy={queueing !== null && queueing === row.jobId}
               onFix={() => startFix(row)}
             />
           ))
@@ -227,7 +227,13 @@ function TriageTableRow({
 
       <div>
         {row.fixable ? (
-          <Button tone="primary" size="sm" disabled={busy || !row.jobId} onClick={onFix}>
+          <Button
+            tone="primary"
+            size="sm"
+            disabled={busy || !row.jobId}
+            onClick={onFix}
+            title={row.jobId ? undefined : 'This run has no job id, so auto-fix cannot reference it.'}
+          >
             {busy ? 'Queueing…' : 'Fix'}
           </Button>
         ) : (
