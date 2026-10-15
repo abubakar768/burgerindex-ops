@@ -12,6 +12,7 @@ import threading
 from datetime import datetime, timezone
 
 from .processes import list_crawlers
+from .project import crawl_cwd
 
 PROJECT_DIR = os.environ.get("CRAWLER_PROJECT_DIR", "/opt/crawlers")
 SCRAPY_BIN = os.environ.get("SCRAPY_BIN", "scrapy")
@@ -40,9 +41,12 @@ def start_crawl(spider: str, source: str = "scheduler", triggered_by: str | None
 
     env = dict(os.environ, CRAWL_SOURCE=source, CRAWL_ENV=env_name,
                CRAWL_TRIGGERED_BY=triggered_by or source)
-    proc = subprocess.Popen(cmd, cwd=PROJECT_DIR, env=env, start_new_session=True,
+    # `scrapy crawl` only works from the directory holding scrapy.cfg, which is
+    # not always PROJECT_DIR itself. Resolved per call so a changed env is picked up.
+    cwd = crawl_cwd(os.environ.get("CRAWLER_PROJECT_DIR", PROJECT_DIR))
+    proc = subprocess.Popen(cmd, cwd=cwd, env=env, start_new_session=True,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     # Reap it when it ends, so a long-lived worker doesn't collect zombie processes
     threading.Thread(target=proc.wait, daemon=True).start()
     return {"pid": proc.pid, "spider": spider, "source": source, "by": env["CRAWL_TRIGGERED_BY"],
-            "log_file": log_file, "started": stamp}
+            "log_file": log_file, "started": stamp, "cwd": cwd}

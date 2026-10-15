@@ -7,11 +7,16 @@ them -- see app/services/spiders.py.
 import os
 import shutil
 import subprocess
+import sys
 
 import pytest
 
 ROOT = "/tmp/ops-test-spiders"
 PROJ = f"{ROOT}/crawlers"
+
+SCRAPY = os.path.join(os.path.dirname(sys.executable), "scrapy")
+if not os.path.exists(SCRAPY):
+    SCRAPY = "scrapy"
 
 os.environ.setdefault("API_TOKEN", "t0ken")
 os.environ.setdefault("CRAWLERS_DIR", PROJ)
@@ -37,7 +42,7 @@ class Composed(scrapy.Spider):
 def project():
     shutil.rmtree(ROOT, ignore_errors=True)
     os.makedirs(ROOT, exist_ok=True)
-    subprocess.run(["scrapy", "startproject", "proj", PROJ], check=True, capture_output=True)
+    subprocess.run([SCRAPY, "startproject", "proj", PROJ], check=True, capture_output=True)
     spider_dir = f"{PROJ}/proj/spiders"
     open(f"{spider_dir}/literal.py", "w").write(LITERAL)
     open(f"{spider_dir}/composed.py", "w").write(COMPOSED)
@@ -61,7 +66,7 @@ def test_scan_misses_composed_names(project):
 
 def test_discover_includes_composed_names(project, monkeypatch):
     monkeypatch.setattr(settings, "CRAWLERS_DIR", project)
-    monkeypatch.setattr(settings, "SCRAPY_BIN", "scrapy")
+    monkeypatch.setattr(settings, "SCRAPY_BIN", SCRAPY)
     found = spiders.discover()
     assert "composed-ksa-crawl" in found, "f-string name missing: Run would refuse it"
     assert "plain-crawl" in found

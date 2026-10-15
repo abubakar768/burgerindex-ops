@@ -24,6 +24,8 @@ import re
 import subprocess
 from functools import lru_cache
 
+from monitor.project import project_root
+
 from ..config import settings
 
 log = logging.getLogger(__name__)
@@ -31,27 +33,6 @@ log = logging.getLogger(__name__)
 NAME_RE = re.compile(r"""^\s+name\s*=\s*['"]([^'"]+)['"]""", re.M)
 SKIP = {".git", "venv", ".venv", "node_modules", "__pycache__"}
 LIST_TIMEOUT = int(os.environ.get("SCRAPY_LIST_TIMEOUT", "120"))
-MAX_CFG_DEPTH = 3
-
-
-def project_root(root: str) -> str | None:
-    """The directory holding scrapy.cfg at or below root, or None.
-
-    CRAWLERS_DIR may point at the repository while the scrapy project sits in a
-    subdirectory (crawlers/ vs crawlers/burgerindex/). scrapy's project commands
-    only work from the project directory, so resolve it rather than assuming.
-    """
-    if os.path.isfile(os.path.join(root, "scrapy.cfg")):
-        return root
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in SKIP]
-        depth = os.path.relpath(dirpath, root).count(os.sep) + 1
-        if depth > MAX_CFG_DEPTH:
-            dirnames[:] = []
-            continue
-        if "scrapy.cfg" in filenames:
-            return dirpath
-    return None
 
 
 def scan_files(root: str) -> dict[str, str]:
