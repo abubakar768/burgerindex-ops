@@ -1,0 +1,38 @@
+.streakHot { color: var(--warn); font-weight: 700; }
+.streakCalm { color: var(--ink-2); }
+
+.evidence {
+  color: var(--ink-3);
+  font-size: 13px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+}
+
+/* Non-fixable rows name an action the API cannot perform yet, so it reads as a
+   label rather than a control that does nothing. */
+.manualAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-ctl);
+  border: 1px dashed var(--line-strong);
+  background: var(--raised);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.manualHint {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}

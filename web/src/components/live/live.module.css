@@ -1,0 +1,98 @@
+/* ------------------------------------------------------------------- log -- */
+.logWrap { display: flex; flex-direction: column; gap: 8px; }
+
+.logHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.log {
+  border-radius: var(--radius-ctl);
+  border: 1px solid var(--line-soft-2);
+  background: var(--code-bg);
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 19px;
+  color: var(--ink-2);
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 220px;
+}
+.logLine { white-space: pre; }
+.logHot { color: var(--warn); }
+.logDim { color: var(--ink-4); }
+
+/* ---------------------------------------------------------------- detail -- */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.detailId { display: flex; flex-direction: column; gap: 4px; }
+.detailName { font-family: var(--mono); font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+.detailMeta { font-size: 13px; color: var(--ink-3); }
+.detailBy { font-size: 13px; color: var(--ink-2); }
+.detailCwd { font-family: var(--mono); font-size: 12px; color: var(--ink-4); overflow-wrap: anywhere; }
+
+.miniGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.mini { padding: 12px; border-radius: var(--radius-ctl); background: var(--raised); }
+.miniKey { font-size: 12px; color: var(--ink-3); }
+.miniValue { font-size: 18px; font-weight: 700; }
+
+/* ------------------------------------------------------------------ stop -- */
+.stopBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line-soft-2);
+}
+.stopRow { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+.stopRowTight { display: flex; flex-wrap: wrap; gap: 8px; }
+.stopStack { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+.stopNote { font-size: 13px; line-height: 20px; color: var(--ink-3); }
+.stopState { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--warn);
+  flex: none;
+}
+
+.stopConfirm {
+  padding: 14px;
+  margin-top: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--warn-line);
+  background: var(--warn-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stopConfirmTitle { font-size: 14px; font-weight: 600; }
+.stopConfirmDetail { font-size: 13px; line-height: 20px; color: var(--warn-ink-3); }
+.stopConfirmRow { display: flex; gap: 8px; }
+
+/* ------------------------------------------------------------------ ram -- */
+.ramLabel { font-size: 13px; }
+.ramOk { color: var(--ok); }
+.ramHot { color: var(--warn); }
+.ramNone { font-size: 12px; color: var(--ink-4); }
+
+.hbStale { color: var(--warn); font-weight: 700; font-size: 13px; }
+.hbFresh { color: var(--ink-3); font-size: 13px; }
+
+@media (max-width: 720px) {
+  .miniGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

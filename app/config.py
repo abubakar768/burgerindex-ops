@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     SCRAPY_BIN: str = "scrapy"              # on the VM: the scheduler venv's bin/scrapy
 
     # Runtime folders on the crawler machine
+    MEMUSAGE_LIMIT_MB: int = 0             # mirrors the crawlers' MEMUSAGE_LIMIT_MB; 0 = unknown
     CRAWLER_LOG_DIR: str = "/var/log/crawlers"
     HEARTBEAT_DIR: str = "/var/crawler-heartbeat"
     AUDIT_LOG: str = "/var/log/burgerindex-ops/audit.jsonl"
@@ -42,6 +43,14 @@ class Settings(BaseSettings):
     GITLAB_PROJECT_ID: str = ""
     GITLAB_TOKEN: str = ""
     GITLAB_TARGET: str = "main"
+
+    # Origins allowed to call this API from a browser, besides DASHBOARD_API.
+    # Only needed while running the Next.js dev server separately.
+    DEV_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @property
+    def dev_origins(self) -> list[str]:
+        return [o.strip() for o in self.DEV_ORIGINS.split(",") if o.strip()]
 
     @property
     def p0_set(self) -> set[str]:

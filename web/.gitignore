@@ -1,0 +1,8 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# out/ is deliberately NOT ignored: the crawler VM has no Node, so the built
+# dashboard ships with the repo and `git pull` deploys it. Run `npm run build`
+# and commit web/out whenever you change anything under web/src.
