@@ -1,0 +1,18 @@
+.stack { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+
+.lastOk { font-size: 13px; font-weight: 600; color: var(--ok); }
+.lastBad { font-size: 13px; font-weight: 600; color: var(--warn); }
+
+.unknown { color: var(--ink-4); font-style: italic; }
+
+.runningLink {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  text-decoration: none;
+}
+.runningLabel { font-weight: 600; color: var(--ok); }
+
+.queued { display: inline-flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.queuedLabel { font-weight: 600; color: var(--accent-text); }

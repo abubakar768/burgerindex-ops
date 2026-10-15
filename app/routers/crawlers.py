@@ -27,6 +27,10 @@ def crawlers(source: str | None = None):
     rows = list_crawlers()
     for r in rows:
         r["p0"] = r["spider"] in settings.p0_set
+        # The crawlers cap themselves with MEMUSAGE_LIMIT_MB. That setting lives in
+        # the crawlers repo, not here, so it is mirrored in this .env; 0 means
+        # unknown and the dashboard then shows RAM without a limit.
+        r["limit_mb"] = settings.MEMUSAGE_LIMIT_MB or None
     return [r for r in rows if not source or r["source"] == source]
 
 

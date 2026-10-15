@@ -24,7 +24,7 @@ os.environ.update(
     API_TOKEN="t0ken", CRAWLERS_DIR=f"{ROOT}/crawlers", CRAWLER_LOG_DIR=f"{ROOT}/logs",
     HEARTBEAT_DIR=f"{ROOT}/hb", AUDIT_LOG=f"{ROOT}/audit.jsonl", SCHEDULER_DB_URL=f"sqlite:///{DB}",
     SCHEDULES_SQL="SELECT spider, schedule, enabled, last_run_at FROM schedules",
-    P0_CRAWLERS="slow-uae-crawl",
+    P0_CRAWLERS="slow-uae-crawl", MEMUSAGE_LIMIT_MB="1500",
 )
 
 SPIDER = '''import scrapy
@@ -100,6 +100,8 @@ def test_run_list_logs_stop(client):
     time.sleep(6)
     cr = client.get("/crawlers").json()[0]
     assert (cr["pid"], cr["source"], cr["by"], cr["env"], cr["p0"]) == (r["pid"], "dashboard", "abubakar", "prod", True)
+    # The dashboard draws RAM against the crawlers' own MEMUSAGE_LIMIT_MB.
+    assert cr["limit_mb"] == 1500
     assert client.get("/schedules").json()[0]["running_pid"] == r["pid"]
     assert any("Spider opened" in l for l in client.get(f"/crawlers/{r['pid']}/logs").json()["lines"])
     bad = client.post(f"/crawlers/{r['pid']}/stop", json={"spider": "other", "mode": "graceful"})
@@ -117,3 +119,19 @@ def test_autofix_registry_uses_crawlers_repo(client):
     reg = load_registry()
     assert reg["slow-uae-crawl"]["spider_file"] == "proj/spiders/slow.py"
     assert reg["slow-uae-crawl"]["repo"] == f"{ROOT}/crawlers"
+
+
+def test_dashboard_does_not_shadow_the_api(client):
+    """The pages live under /ui, so the API keeps /triage and /schedules."""
+    from app.main import DASHBOARD, WEB_DIR
+
+    assert DASHBOARD == "/ui"
+    # A bare /schedules is the API, never a page: it answers JSON, not HTML.
+    assert isinstance(client.get("/schedules").json(), list)
+
+    if not os.path.isdir(WEB_DIR):
+        pytest.skip("web/out is not built")
+
+    root = client.get("/", follow_redirects=False)
+    assert root.status_code == 307 and root.headers["location"] == "/ui/live/"
+    assert "text/html" in client.get("/ui/live/").headers["content-type"]
