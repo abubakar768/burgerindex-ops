@@ -68,6 +68,21 @@ def test_auth_required(client):
     assert client.get("/health").status_code == 200
 
 
+def test_openapi_declares_bearer_auth(client):
+    """Without a declared scheme /docs has no Authorize button and every
+    "Try it out" returns 401, with no way to supply the token."""
+    schemes = client.get("/openapi.json").json().get("components", {}).get("securitySchemes", {})
+    assert schemes, "no securitySchemes: /docs cannot send a token"
+    assert any(v.get("scheme") == "bearer" for v in schemes.values()), schemes
+
+
+def test_wrong_token_rejected(client):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    assert TestClient(app, headers={"Authorization": "Bearer nope"}).get("/server").status_code == 401
+
+
 def test_spiders_found_in_crawlers_repo(client):
     assert client.get("/spiders").json() == [
         {"spider": "slow-uae-crawl", "file": "proj/spiders/slow.py", "p0": True}]
