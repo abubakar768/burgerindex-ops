@@ -80,6 +80,39 @@ class Composed(scrapy.Spider):
 '''
 
 
+# The crawlers repo gets these from crawlers_patch/. The sandbox installs the
+# same extension, so the dashboard's ITEMS / REQUESTS / HEARTBEAT columns and the
+# "may be frozen" banner have real data to show.
+PROJECT_SETTINGS = """
+# --- added by scripts/local_sandbox.py ---------------------------------------
+EXTENSIONS = {{"evidence.heartbeat.HeartbeatExtension": 510}}
+HEARTBEAT_DIR = "{hb}"
+HEARTBEAT_INTERVAL = 5          # 30 on the VM; faster here so the UI moves
+MEMUSAGE_ENABLED = True
+MEMUSAGE_WARNING_MB = 1500
+MEMUSAGE_LIMIT_MB = 2000        # must match MEMUSAGE_LIMIT_MB in the ops .env
+"""
+
+
+def install_heartbeat() -> None:
+    """Copy crawlers_patch/heartbeat.py into the sandbox project and enable it."""
+    patch = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "crawlers_patch", "heartbeat.py")
+    # Top level, beside scrapy.cfg -- the same place it sits in the crawlers repo,
+    # and what makes "evidence.heartbeat..." importable from the crawl cwd.
+    pkg = f"{PROJ}/evidence"
+    os.makedirs(pkg, exist_ok=True)
+    open(f"{pkg}/__init__.py", "w").close()
+    shutil.copyfile(patch, f"{pkg}/heartbeat.py")
+
+    settings = f"{PROJ}/proj/settings.py"
+    body = open(settings).read()
+    marker = "# --- added by scripts/local_sandbox.py"
+    if marker in body:
+        body = body[:body.index(marker)].rstrip() + "\n"
+    open(settings, "w").write(body + PROJECT_SETTINGS.format(hb=f"{ROOT}/hb"))
+
+
 def scrapy_bin() -> str:
     cand = os.path.join(os.path.dirname(sys.executable), "scrapy")
     return cand if os.path.exists(cand) else "scrapy"
@@ -150,6 +183,7 @@ def setup() -> None:
         open(f"{spiders}/{cls.lower()}.py", "w").write(
             SPIDER.format(cls=cls, name=name, n=n, delay=delay, port=TARGET_PORT))
     open(f"{spiders}/composed.py", "w").write(COMPOSED_SPIDER)
+    install_heartbeat()
 
     con = sqlite3.connect(DB)
     con.executescript("""
@@ -190,6 +224,7 @@ CRAWLERS_DIR={PROJ}
 SCRAPY_BIN={scrapy_bin()}
 CRAWLER_LOG_DIR={ROOT}/logs
 HEARTBEAT_DIR={ROOT}/hb
+MEMUSAGE_LIMIT_MB=2000
 AUDIT_LOG={ROOT}/audit.jsonl
 SCHEDULER_DB_URL=sqlite:///{DB}
 SCHEDULES_SQL={SCHEDULES_SQL}
@@ -363,7 +398,10 @@ def serve() -> int:
     print(f"fake dashboard   http://127.0.0.1:{DASH_PORT}/api/crawler-jobs")
     print("\nNow run, in another terminal:\n")
     print("  uvicorn app.main:app --reload --port 8090 --env-file .env.sandbox\n")
-    print("  http://localhost:8090/docs   Authorize with:  sandbox-token\n")
+    print("  http://localhost:8090/       the dashboard. Sign in with:")
+    print("                                 API token  sandbox-token")
+    print("                                 your name  anything")
+    print("  http://localhost:8090/docs   the API. Authorize with:  sandbox-token\n")
     print("Ctrl-C here when you are done.")
     try:
         while True:

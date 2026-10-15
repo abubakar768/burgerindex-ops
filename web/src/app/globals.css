@@ -1,5 +1,6 @@
 /* Design tokens taken from the canvas artboards (Auto Crawlers Fix - Designs). */
-:root {
+:root,
+:root[data-theme='dark'] {
   color-scheme: dark;
 
   /* Grounds */
@@ -94,6 +95,109 @@
   --radius-card: 12px;
   --radius-ctl: 8px;
   --radius-lg: 10px;
+}
+
+
+/* ---------------------------------------------------------------- light -- */
+/* The canvas is dark, so dark is the default and this is the opt-in theme.
+   Values are not a mechanical inversion: every ink and accent is darkened until
+   it clears 4.5:1 on its own ground, because the dark palette's bright accents
+   (#4FB3D9, #F2A65A, #5FD3A0) all fail that test on white. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Grounds */
+  --bg: #F6F8FB;
+  --panel: #FFFFFF;
+  --panel-blue: #EFF6FB;
+  --raised: #F1F4F9;
+  --code-bg: #F5F7FA;
+  --row-sel: #E4EFF7;
+  --row-hover: #F4F7FB;
+
+  /* Lines */
+  --line: #DCE2EC;
+  --line-soft: #E7EBF2;
+  --line-soft-2: #E2E7F0;
+  --line-strong: #C2CAD9;
+  --line-dashed: #B7C0D1;
+
+  /* Ink */
+  --ink: #141A29;
+  --ink-2: #3A4459;
+  --ink-3: #566075;
+  --ink-4: #68718A;
+  --ink-dim: #99A0B0;
+
+  /* Accent */
+  --accent: #1C7FA6;
+  --accent-hi: #14607E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(28, 127, 166, 0.10);
+  --accent-soft-2: rgba(28, 127, 166, 0.12);
+  --accent-line: rgba(28, 127, 166, 0.35);
+  --accent-line-2: rgba(28, 127, 166, 0.45);
+  --accent-text: #15607E;
+  --accent-detail: #41586B;
+
+  /* Warn */
+  --warn: #B25E00;
+  --warn-ink: #8A4B00;
+  --warn-ink-2: #8A4B00;
+  --warn-ink-3: #6B4A2A;
+  --warn-bg: #FFF6EC;
+  --warn-bg-2: #FFF9F2;
+  --warn-line: #E7C8A4;
+  --warn-line-2: #EBD3B4;
+  --warn-soft: rgba(178, 94, 0, 0.08);
+  --warn-soft-2: rgba(178, 94, 0, 0.10);
+  --warn-edge: rgba(178, 94, 0, 0.30);
+  --warn-edge-2: rgba(178, 94, 0, 0.35);
+  --warn-solid-ink: #FFFFFF;
+
+  /* Success */
+  --ok: #0F7A52;
+  --ok-bg: #EEF8F3;
+  --ok-line: #BFE3D2;
+  --ok-ink: #2F6B55;
+
+  /* Danger */
+  --danger: #C0392B;
+  --danger-ink: #FFFFFF;
+
+  /* Infra category chip */
+  --infra-ink: #1F4E79;
+  --infra-bg: rgba(31, 78, 121, 0.08);
+  --infra-line: rgba(31, 78, 121, 0.28);
+
+  /* Run-source chips */
+  --src-sched-ink: #15607E;
+  --src-sched-bg: rgba(28, 127, 166, 0.10);
+  --src-sched-line: rgba(28, 127, 166, 0.32);
+  --src-dash-ink: #4B3DA8;
+  --src-dash-bg: rgba(90, 70, 200, 0.10);
+  --src-dash-line: rgba(90, 70, 200, 0.32);
+  --src-manual-ink: #8A4B00;
+  --src-manual-bg: rgba(178, 94, 0, 0.10);
+  --src-manual-line: rgba(178, 94, 0, 0.32);
+
+  /* Diff */
+  --diff-add-bg: rgba(15, 122, 82, 0.10);
+  --diff-add-ink: #0B5538;
+  --diff-del-bg: rgba(192, 57, 43, 0.09);
+  --diff-del-ink: #8E2A20;
+  --count-add: #0F7A52;
+  --count-del: #C0392B;
+
+  --track: #E2E7F0;
+  --neutral-bar: #7B8CA8;
+}
+
+/* The log and diff panels are near-black in dark; on light they need a visible
+   edge, since a pale panel on a pale card otherwise disappears. */
+:root[data-theme='light'] .skel {
+  background: linear-gradient(90deg, #EDF0F5 0%, #E0E5EE 50%, #EDF0F5 100%);
+  background-size: 200% 100%;
 }
 
 * { box-sizing: border-box; }
