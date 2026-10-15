@@ -132,7 +132,12 @@ def run_claude(prompt: str, cwd: str) -> dict:
 def test_crawl(spider: str, cwd: str, out_file: str) -> tuple[list[dict], str]:
     if os.path.exists(out_file):
         os.remove(out_file)
-    p = sh(["scrapy", "crawl", spider, *TEST_SETTINGS, "-O", out_file], cwd=cwd, timeout=900)
+    # The worktree root is not necessarily the scrapy project dir; out_file is
+    # absolute, so running a level down does not move the output.
+    from monitor.project import crawl_cwd
+
+    p = sh(["scrapy", "crawl", spider, *TEST_SETTINGS, "-O", out_file],
+           cwd=crawl_cwd(cwd), timeout=900)
     items = read_jsonl(out_file) if os.path.exists(out_file) else []
     return items, p.stderr[-4000:]
 

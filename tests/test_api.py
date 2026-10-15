@@ -12,7 +12,15 @@ os.makedirs(f"{ROOT}/logs", exist_ok=True)
 os.makedirs(f"{ROOT}/hb", exist_ok=True)
 DB = f"{ROOT}/scheduler.db"
 
+# Pin scrapy to this venv. Without it the suite picks up whatever SCRAPY_BIN
+# the developer's .env points at -- which is the crawlers venv, an older Scrapy
+# that cannot run the spider below.
+SCRAPY = os.path.join(os.path.dirname(sys.executable), "scrapy")
+if not os.path.exists(SCRAPY):
+    SCRAPY = "scrapy"
+
 os.environ.update(
+    SCRAPY_BIN=SCRAPY,
     API_TOKEN="t0ken", CRAWLERS_DIR=f"{ROOT}/crawlers", CRAWLER_LOG_DIR=f"{ROOT}/logs",
     HEARTBEAT_DIR=f"{ROOT}/hb", AUDIT_LOG=f"{ROOT}/audit.jsonl", SCHEDULER_DB_URL=f"sqlite:///{DB}",
     SCHEDULES_SQL="SELECT spider, schedule, enabled, last_run_at FROM schedules",
@@ -35,7 +43,7 @@ class Slow(scrapy.Spider):
 @pytest.fixture(scope="module")
 def client():
     if not os.path.exists(f"{ROOT}/crawlers/scrapy.cfg"):
-        subprocess.run(["scrapy", "startproject", "proj", f"{ROOT}/crawlers"], check=True, capture_output=True)
+        subprocess.run([SCRAPY, "startproject", "proj", f"{ROOT}/crawlers"], check=True, capture_output=True)
     open(f"{ROOT}/crawlers/proj/spiders/slow.py", "w").write(SPIDER)
     con = sqlite3.connect(DB)
     con.execute("DROP TABLE IF EXISTS schedules")
