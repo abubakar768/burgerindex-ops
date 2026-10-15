@@ -10,3 +10,4 @@ jsonschema>=4.20
 boto3>=1.34          # optional, S3 evidence
 pytest>=8
 httpx>=0.27          # tests
+scrapy>=2.11         # tests
