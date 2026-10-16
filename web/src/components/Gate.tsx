@@ -35,7 +35,7 @@ export function Gate() {
     setActiveSession(candidate);
 
     try {
-      // /spiders is the cheapest authenticated route, so it doubles as the check.
+      // /api/spiders is the cheapest authenticated route, so it doubles as the check.
       await api.spiders();
       signIn(candidate);
     } catch (cause) {
