@@ -33,8 +33,14 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Every endpoint is namespaced under /api, which leaves the root to the
+ * dashboard's own pages. Paths below are written without it.
+ */
+export const API_PREFIX = '/api';
+
 export function apiUrl(path: string): string {
-  return getActiveSession().base + path;
+  return getActiveSession().base + API_PREFIX + path;
 }
 
 interface RequestOptions {
@@ -99,8 +105,8 @@ export const api = {
       body: { user },
     }),
 
-  // The endpoint was renamed from /triage; the backend still answers the old
-  // path, but nothing here should call it.
+  // Renamed from /triage; the backend still answers the old path under /api,
+  // but nothing here should call it.
   issues: (days = 7, signal?: AbortSignal) =>
     request<TriageRow[]>(`/issues?days=${days}`, { signal }),
 

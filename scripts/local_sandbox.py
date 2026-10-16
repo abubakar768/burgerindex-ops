@@ -306,23 +306,23 @@ def smoke() -> int:
         c = TestClient(app, headers={"Authorization": "Bearer sandbox-token"})
 
         print("\n1. Auth")
-        check("no token is rejected", TestClient(app).get("/server").status_code == 401)
-        check("token is accepted", c.get("/server").status_code == 200)
+        check("no token is rejected", TestClient(app).get("/api/server").status_code == 401)
+        check("token is accepted", c.get("/api/server").status_code == 200)
 
         print("\n2. Server health")
-        s = c.get("/server").json()
+        s = c.get("/api/server").json()
         check("reports memory and disk", "memory" in s and "disk" in s,
               f"keys={','.join(sorted(s))[:60]}")
 
         print("\n3. Spiders (the Run allow-list)")
-        sp = {x["spider"] for x in c.get("/spiders").json()}
+        sp = {x["spider"] for x in c.get("/api/spiders").json()}
         check("literal-named spider found", "sandbox-uae-crawl" in sp)
         check("composed name found via `scrapy list`", "sandbox-uae-composed-crawl" in sp,
               "this is the bug fixed on main")
-        check("P0 spider flagged", any(x["p0"] for x in c.get("/spiders").json() if x["spider"] == P0))
+        check("P0 spider flagged", any(x["p0"] for x in c.get("/api/spiders").json() if x["spider"] == P0))
 
         print("\n4. Schedules (beat-shaped tables)")
-        rows = c.get("/schedules").json()
+        rows = c.get("/api/schedules").json()
         names = [r["spider"] for r in rows]
         check("returns scheduled spiders", "sandbox-uae-crawl" in names, f"{len(rows)} rows")
         check("cron rendered", any(r["schedule"] == "0 6 * * *" for r in rows))
@@ -330,43 +330,43 @@ def smoke() -> int:
               "expected: documents the known gap")
 
         print("\n5. Run / list / logs / stop")
-        check("unknown spider refused", c.post("/schedules/not-a-spider/run",
+        check("unknown spider refused", c.post("/api/schedules/not-a-spider/run",
                                                json={"user": "abubakar"}).status_code == 404)
         check("scheduled-but-absent spider refused",
-              c.post("/schedules/sandbox-retired-crawl/run",
+              c.post("/api/schedules/sandbox-retired-crawl/run",
                      json={"user": "abubakar"}).status_code == 404)
-        r = c.post("/schedules/sandbox-uae-crawl/run", json={"user": "abubakar"})
+        r = c.post("/api/schedules/sandbox-uae-crawl/run", json={"user": "abubakar"})
         check("run accepted", r.status_code == 200, f"pid={r.json().get('pid')}")
         pid = r.json().get("pid")
         check("launched from the scrapy project dir", r.json().get("cwd") == PROJ, str(r.json().get("cwd")))
         check("second run refused while running",
-              c.post("/schedules/sandbox-uae-crawl/run", json={"user": "abubakar"}).status_code == 409)
+              c.post("/api/schedules/sandbox-uae-crawl/run", json={"user": "abubakar"}).status_code == 409)
 
         for _ in range(40):
-            live = c.get("/crawlers").json()
+            live = c.get("/api/crawlers").json()
             if any(x["pid"] == pid for x in live):
                 break
             time.sleep(0.5)
-        live = c.get("/crawlers").json()
+        live = c.get("/api/crawlers").json()
         mine = [x for x in live if x["pid"] == pid]
         check("appears in /crawlers", bool(mine),
               f"{mine[0]['spider']} ram={mine[0].get('rss_mb')}MB" if mine else "not seen")
         if mine:
             check("tagged as a dashboard run", mine[0]["source"] == "dashboard" and mine[0]["by"] == "abubakar")
             check("running pid shown on /schedules",
-                  any(x["running_pid"] == pid for x in c.get("/schedules").json()))
-            logs = c.get(f"/crawlers/{pid}/logs?lines=50").json()
+                  any(x["running_pid"] == pid for x in c.get("/api/schedules").json()))
+            logs = c.get(f"/api/crawlers/{pid}/logs?lines=50").json()
             check("log tail readable", any("Spider opened" in l for l in logs.get("lines", [])),
                   f"{len(logs.get('lines', []))} lines")
-            bad = c.post(f"/crawlers/{pid}/stop", json={"spider": "wrong-name", "mode": "graceful"})
+            bad = c.post(f"/api/crawlers/{pid}/stop", json={"spider": "wrong-name", "mode": "graceful"})
             check("stop refuses a mismatched spider name", bad.status_code == 409)
-            st = c.post(f"/crawlers/{pid}/stop", json={"spider": "sandbox-uae-crawl", "user": "abubakar"})
+            st = c.post(f"/api/crawlers/{pid}/stop", json={"spider": "sandbox-uae-crawl", "user": "abubakar"})
             check("stop accepted", st.status_code == 200, st.json().get("signal"))
             from monitor.processes import wait_gone
             check("process actually exited", wait_gone(pid, 30))
 
         print("\n6. Issues (synthetic crawl history)")
-        t = c.get("/issues?days=7")
+        t = c.get("/api/issues?days=7")
         check("issues endpoint responds", t.status_code == 200)
         if t.status_code == 200:
             found = t.json()
@@ -384,8 +384,8 @@ def smoke() -> int:
         return 1 if fail_n else 0
     finally:
         try:
-            for cr in c.get("/crawlers").json():
-                c.post(f"/crawlers/{cr['pid']}/stop", json={"spider": cr["spider"], "mode": "kill"})
+            for cr in c.get("/api/crawlers").json():
+                c.post(f"/api/crawlers/{cr['pid']}/stop", json={"spider": cr["spider"], "mode": "kill"})
         except Exception:
             pass
         stop_services(procs)
@@ -401,7 +401,7 @@ def serve() -> int:
     print("  http://localhost:8090/       the dashboard. Sign in with:")
     print("                                 API token  sandbox-token")
     print("                                 your name  anything")
-    print("  http://localhost:8090/docs   the API. Authorize with:  sandbox-token\n")
+    print("  http://localhost:8090/docs   the API, served under /api. Authorize with:  sandbox-token\n")
     print("Ctrl-C here when you are done.")
     try:
         while True:
