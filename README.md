@@ -18,7 +18,7 @@ burgerindex-ops never imports code from either project.
 app/            FastAPI: config, auth, routers, services
 web/            Next.js dashboard, built to static files the API serves
 monitor/        processes, server health, stop, logs, start_crawl
-triage/         failure rules, streaks, lost runs, P0 watch
+triage/         failure rules, streaks, lost runs, P0 watch (served as /issues)
 autofix/        Claude Code fix pipeline + validation
 worker/         Celery: autofix + P0 watch (queue: burgerindex-ops)
 crawlers_patch/ files + settings for the crawlers repo PR
@@ -75,7 +75,7 @@ Both units use `KillMode=process`, so restarting burgerindex-ops never kills run
 | GET | `/spiders` | spiders found in the crawlers repo |
 | GET | `/schedules` | scheduler's schedules + running PID |
 | POST | `/schedules/{spider}/run` | `{user}`; refuses unknown or already running spiders |
-| GET | `/triage?days=7` | classified failures, worst first |
+| GET | `/issues?days=7` | classified failures, worst first (`/triage` still works, deprecated) |
 | POST | `/autofix` | `{job_id, user}` queues a fix |
 | GET | `/autofix/{task_id}` | fix status + report |
 | POST | `/autofix/approve` | `{report_path, user}` opens the GitLab MR |
@@ -89,7 +89,7 @@ Stop, Run, auto-fix and Approve are written to `AUDIT_LOG`.
 | `/` | redirects to the live crawlers page |
 | `/ui/live/` | server health, running crawls, live log, Stop / Force stop / Kill |
 | `/ui/schedules/` | the scheduler's schedules, next run, Run button |
-| `/ui/triage/` | classified failures, worst first, Fix button |
+| `/ui/issues/` | classified failures, worst first, Fix button |
 | `/ui/fix/?task=` | the agent's diagnosis, diff, test crawl, Approve |
 
 It is served under `/ui` because the API already owns `/triage` and

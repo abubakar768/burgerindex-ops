@@ -100,7 +100,7 @@ export type FailureCategory =
   | 'endpoint_changed' | 'blocked' | 'parse_broken' | 'proxy_auth' | 'zyte_error'
   | 'upstream_5xx' | 'network' | 'timeout' | 'shutdown' | 'silent_drop' | 'lost' | 'unknown';
 
-/** GET /triage */
+/** GET /issues (formerly /triage) */
 export interface TriageRow {
   crawler: string;
   jobId: string | null;

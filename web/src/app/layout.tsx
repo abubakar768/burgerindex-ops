@@ -7,7 +7,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Crawler operations · burgerindex',
-  description: 'Live crawlers, schedules, triage and auto-fix review for the burgerindex crawlers.',
+  description: 'Live crawlers, schedules, issues and auto-fix review for the burgerindex crawlers.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

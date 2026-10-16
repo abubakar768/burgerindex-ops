@@ -139,7 +139,7 @@ export function StopControls({
       <div className={s.stopStack}>
         <div className={s.stopConfirmTitle}>Killed · the run ends with no saved stats</div>
         <div className={s.stopNote}>
-          The log and last heartbeat are kept as evidence for triage.
+          The log and last heartbeat are kept as evidence on the Issues page.
         </div>
         <Button tone="ghost" size="lg" onClick={() => onStage('idle')}>Done</Button>
       </div>
