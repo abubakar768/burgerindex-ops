@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .auth import require_token
 from .config import settings
-from .routers import autofix, crawlers, schedules, triage
+from .routers import autofix, crawlers, issues, schedules
 
 app = FastAPI(title="burgerindex-ops", version="0.1.0")
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (crawlers.router, schedules.router, triage.router, autofix.router):
+for r in (crawlers.router, schedules.router, issues.router, autofix.router):
     app.include_router(r, dependencies=[Depends(require_token)])
 
 

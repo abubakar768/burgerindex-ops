@@ -200,7 +200,7 @@ export default function LiveCrawlersPage() {
               />
             ))}
             <NavButton href="/schedules">Schedules</NavButton>
-            <NavButton href="/triage">Triage</NavButton>
+            <NavButton href="/issues">Issues</NavButton>
           </>
         }
       />

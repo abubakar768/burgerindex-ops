@@ -9,8 +9,8 @@ FastAPI app in `../app` serves. There is no Node runtime in production.
 | Route | Reads | Writes |
 | --- | --- | --- |
 | `/ui/live/` | `GET /server`, `GET /crawlers`, `GET /crawlers/{pid}/logs` + `/logs/stream` | `POST /crawlers/{pid}/stop` |
-| `/ui/schedules/` | `GET /schedules`, `GET /triage` | `POST /schedules/{spider}/run` |
-| `/ui/triage/` | `GET /triage`, `GET /spiders` | `POST /autofix` |
+| `/ui/schedules/` | `GET /schedules`, `GET /issues` | `POST /schedules/{spider}/run` |
+| `/ui/issues/` | `GET /issues`, `GET /spiders` | `POST /autofix` |
 | `/ui/fix/?task=…` | `GET /autofix/{task_id}` | `POST /autofix/approve`, `POST /autofix` |
 
 `/` redirects to `/ui/live/`.
@@ -19,7 +19,7 @@ FastAPI app in `../app` serves. There is no Node runtime in production.
 
 The API owns `/triage`, `/schedules`, `/crawlers`, `/spiders` and `/server` at
 the root, and FastAPI matches those routes before any static mount. With the
-pages at `/`, a bare `/triage` would return 401 JSON instead of the page. The
+pages at `/`, a bare `/issues` would return 401 JSON instead of the page. The
 `basePath` in `next.config.mjs` and the mount in `app/main.py` must agree.
 
 ## Sign-in
@@ -95,12 +95,12 @@ component reads them, so a palette change is a one-file change.
   mirrored as `MEMUSAGE_LIMIT_MB` in the ops `.env` and returned as `limit_mb`.
   Left at `0` the column shows RAM with no limit bar. A spider that overrides
   the limit in `custom_settings` is not reflected.
-- **Non-fixable triage actions.** Rows such as "Retry with Zyte alt" or
+- **Non-fixable issue actions.** Rows such as "Retry with Zyte alt" or
   "Check proxy" name an action the API cannot perform; they render as labels
   marked *manual*, not as buttons that do nothing.
 - **Last run.** The scheduler database stores `last_run_at` but no outcome, so
   the LAST RUN column shows the timestamp and borrows a failure label from
-  `GET /triage` when that crawler has one.
+  `GET /issues` when that crawler has one.
 - **"Retry with a note".** `POST /autofix` takes only a job id and a user, so
   the button is "Retry fix" and queues a fresh attempt without a note.
 - **Reject.** There is no endpoint for it. Reject returns to triage and leaves

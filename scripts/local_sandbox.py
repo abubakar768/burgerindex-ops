@@ -33,7 +33,7 @@ DB = f"{ROOT}/scheduler.db"
 JOBS = f"{ROOT}/jobs.json"
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env.sandbox")
 TARGET_PORT = 8777     # what the sandbox spiders crawl
-DASH_PORT = 8788       # fake dashboard API for /triage
+DASH_PORT = 8788       # fake dashboard API behind /issues
 P0 = "sandbox-p0-crawl"
 
 SCHEDULES_SQL = (
@@ -123,7 +123,7 @@ def iso(dt: datetime) -> str:
 
 
 def build_jobs() -> list[dict]:
-    """Crawl history shaped like GET /api/crawler-jobs, covering each triage rule."""
+    """Crawl history shaped like GET /api/crawler-jobs, covering each failure rule."""
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     jobs: list[dict] = []
 
@@ -365,9 +365,9 @@ def smoke() -> int:
             from monitor.processes import wait_gone
             check("process actually exited", wait_gone(pid, 30))
 
-        print("\n6. Triage (synthetic crawl history)")
-        t = c.get("/triage?days=7")
-        check("triage responds", t.status_code == 200)
+        print("\n6. Issues (synthetic crawl history)")
+        t = c.get("/issues?days=7")
+        check("issues endpoint responds", t.status_code == 200)
         if t.status_code == 200:
             found = t.json()
             cats = sorted({row.get("category") for row in found if row.get("category")})
