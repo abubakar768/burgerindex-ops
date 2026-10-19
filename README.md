@@ -1,6 +1,6 @@
 # burgerindex-ops
 
-API + worker for the Crawler Operations Dashboard: live crawlers, server health, logs,
+API + worker for burgerindex ops: live crawlers, server health, logs,
 Stop / Run buttons, schedules, triage, P0 alerts and auto-fix.
 
 ## How it uses the other two projects

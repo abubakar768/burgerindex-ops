@@ -6,7 +6,7 @@ import { NO_FLASH_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Crawler operations · burgerindex',
+  title: 'burgerindex ops',
   description: 'Live crawlers, schedules, issues and auto-fix review for the burgerindex crawlers.',
 };
 
