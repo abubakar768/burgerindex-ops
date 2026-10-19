@@ -101,3 +101,28 @@ def test_ignores_non_spider_output(project, monkeypatch):
     found = spiders.discover()
     assert "input mapping file not available" not in found
     assert "composed-ksa-crawl" in found
+
+
+def test_scan_skips_local_variables_that_look_like_names(tmp_path):
+    """`name = ' '.join(...)` inside a parse method is not a spider name.
+
+    The crawlers repo has exactly this in spiders/google.py, and it used to put
+    a bogus ' ' entry in the Run allow-list.
+    """
+    from app.services.spiders import scan_files
+
+    spiders = tmp_path / "proj" / "spiders"
+    spiders.mkdir(parents=True)
+    (spiders / "real.py").write_text(
+        "import scrapy\n"
+        "class Real(scrapy.Spider):\n"
+        "    name = 'real-uae-crawl'\n"
+        "    def parse(self, response):\n"
+        "        name = ' '.join(response.css('h1::text').getall())\n"
+        "        title = 'some title with spaces'\n"
+        "        yield {'name': name, 'title': title}\n"
+    )
+
+    found = scan_files(str(tmp_path))
+    assert "real-uae-crawl" in found
+    assert all(n.strip() and " " not in n for n in found), found
