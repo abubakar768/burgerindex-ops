@@ -22,6 +22,11 @@ const ICON_PATHS = {
     'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
   ],
   moon: ['M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z'],
+  activity: ['M3 12h4l3 8 4-16 3 8h4'],
+  calendar: [
+    'M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z',
+    'M4 9h16', 'M8 3v4', 'M16 3v4',
+  ],
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

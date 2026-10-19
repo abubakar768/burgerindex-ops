@@ -9,7 +9,7 @@ import type { TriageRow } from '@/lib/types';
 import { useSession, useToast } from '@/components/Providers';
 import { PageHeader } from '@/components/PageHeader';
 import {
-  Banner, Button, CategoryChip, EmptyState, FilterButton, NavButton, Pill, StatCard, ui,
+  Banner, Button, CategoryChip, EmptyState, FilterButton, Pill, StatCard, ui,
 } from '@/components/Primitives';
 import { HeaderRow, Row, SkeletonRows, Table, TableFoot, cell } from '@/components/Table';
 import s from './issues.module.css';
@@ -127,7 +127,6 @@ export default function IssuesPage() {
             <Button tone="solid" onClick={issues.refresh}>
               {issues.loading ? 'Syncing…' : 'Sync'}
             </Button>
-            <NavButton href="/live">Live crawlers</NavButton>
           </>
         )}
       />
