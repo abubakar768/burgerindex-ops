@@ -25,6 +25,5 @@ def issues(days: int = Query(7, ge=1, le=30)):
 
 @router.get("/triage", deprecated=True)
 def triage(days: int = Query(7, ge=1, le=30)):
-    """Deprecated: the former name for GET /issues. Kept so existing callers
-    (scripts, curl in the README, anything on the VM) keep working."""
+    """Deprecated: the former name for GET /api/issues."""
     return _issues(days)

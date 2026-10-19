@@ -56,15 +56,15 @@ def client():
     from app.main import app
     c = TestClient(app, headers={"Authorization": "Bearer t0ken"})
     yield c
-    for cr in c.get("/crawlers").json():
-        c.post(f"/crawlers/{cr['pid']}/stop", json={"spider": cr["spider"], "mode": "kill"})
+    for cr in c.get("/api/crawlers").json():
+        c.post(f"/api/crawlers/{cr['pid']}/stop", json={"spider": cr["spider"], "mode": "kill"})
     site.terminate()
 
 
 def test_auth_required(client):
     from fastapi.testclient import TestClient
     from app.main import app
-    assert TestClient(app).get("/server").status_code == 401
+    assert TestClient(app).get("/api/server").status_code == 401
     assert client.get("/health").status_code == 200
 
 
@@ -80,33 +80,33 @@ def test_wrong_token_rejected(client):
     from fastapi.testclient import TestClient
 
     from app.main import app
-    assert TestClient(app, headers={"Authorization": "Bearer nope"}).get("/server").status_code == 401
+    assert TestClient(app, headers={"Authorization": "Bearer nope"}).get("/api/server").status_code == 401
 
 
 def test_spiders_found_in_crawlers_repo(client):
-    assert client.get("/spiders").json() == [
+    assert client.get("/api/spiders").json() == [
         {"spider": "slow-uae-crawl", "file": "proj/spiders/slow.py", "p0": True}]
 
 
 def test_schedules_from_scheduler_db(client):
-    rows = client.get("/schedules").json()
+    rows = client.get("/api/schedules").json()
     assert rows[0]["spider"] == "slow-uae-crawl" and rows[0]["running_pid"] is None
 
 
 def test_run_list_logs_stop(client):
-    assert client.post("/schedules/not-a-spider/run", json={"user": "abubakar"}).status_code == 404
-    r = client.post("/schedules/slow-uae-crawl/run", json={"user": "abubakar"}).json()
-    assert client.post("/schedules/slow-uae-crawl/run", json={"user": "abubakar"}).status_code == 409
+    assert client.post("/api/schedules/not-a-spider/run", json={"user": "abubakar"}).status_code == 404
+    r = client.post("/api/schedules/slow-uae-crawl/run", json={"user": "abubakar"}).json()
+    assert client.post("/api/schedules/slow-uae-crawl/run", json={"user": "abubakar"}).status_code == 409
     time.sleep(6)
-    cr = client.get("/crawlers").json()[0]
+    cr = client.get("/api/crawlers").json()[0]
     assert (cr["pid"], cr["source"], cr["by"], cr["env"], cr["p0"]) == (r["pid"], "dashboard", "abubakar", "prod", True)
     # The dashboard draws RAM against the crawlers' own MEMUSAGE_LIMIT_MB.
     assert cr["limit_mb"] == 1500
-    assert client.get("/schedules").json()[0]["running_pid"] == r["pid"]
-    assert any("Spider opened" in l for l in client.get(f"/crawlers/{r['pid']}/logs").json()["lines"])
-    bad = client.post(f"/crawlers/{r['pid']}/stop", json={"spider": "other", "mode": "graceful"})
+    assert client.get("/api/schedules").json()[0]["running_pid"] == r["pid"]
+    assert any("Spider opened" in l for l in client.get(f"/api/crawlers/{r['pid']}/logs").json()["lines"])
+    bad = client.post(f"/api/crawlers/{r['pid']}/stop", json={"spider": "other", "mode": "graceful"})
     assert bad.status_code == 409
-    ok = client.post(f"/crawlers/{r['pid']}/stop", json={"spider": "slow-uae-crawl", "user": "abubakar"})
+    ok = client.post(f"/api/crawlers/{r['pid']}/stop", json={"spider": "slow-uae-crawl", "user": "abubakar"})
     assert ok.json()["signal"] == "SIGTERM"
     from monitor.processes import wait_gone
     assert wait_gone(r["pid"], 30)
@@ -123,24 +123,26 @@ def test_autofix_registry_uses_crawlers_repo(client):
 
 def test_issues_endpoint_and_deprecated_alias(client):
     """The endpoint was renamed /triage -> /issues; the old path still answers."""
-    fresh = client.get("/issues?days=7")
-    legacy = client.get("/triage?days=7")
+    fresh = client.get("/api/issues?days=7")
+    legacy = client.get("/api/triage?days=7")
     assert fresh.status_code == legacy.status_code == 200
     assert fresh.json() == legacy.json()
 
 
-def test_dashboard_does_not_shadow_the_api(client):
-    """The pages live under /ui, so the API keeps /triage and /schedules."""
-    from app.main import DASHBOARD, WEB_DIR
+def test_api_is_namespaced_and_dashboard_owns_the_root(client):
+    """The API lives under /api, so the dashboard owns the root paths."""
+    from app.main import API_PREFIX, WEB_DIR
 
-    assert DASHBOARD == "/ui"
-    # A bare /schedules is the API, never a page: it answers JSON, not HTML.
-    assert isinstance(client.get("/schedules").json(), list)
-    assert isinstance(client.get("/issues").json(), list)
+    assert API_PREFIX == "/api"
+    # The API answers under the prefix, and nowhere else.
+    assert isinstance(client.get("/api/schedules").json(), list)
+    assert client.get("/schedules").headers.get("content-type", "").startswith("text/html")
 
     if not os.path.isdir(WEB_DIR):
         pytest.skip("web/out is not built")
 
-    root = client.get("/", follow_redirects=False)
-    assert root.status_code == 307 and root.headers["location"] == "/ui/live/"
-    assert "text/html" in client.get("/ui/live/").headers["content-type"]
+    # The dashboard now owns the root, including the paths the API used to hold.
+    for page in ("/", "/live/", "/issues/", "/schedules/", "/fix/"):
+        res = client.get(page)
+        assert res.status_code == 200, page
+        assert "text/html" in res.headers["content-type"], page

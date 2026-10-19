@@ -8,18 +8,18 @@ FastAPI app in `../app` serves. There is no Node runtime in production.
 
 | Route | Reads | Writes |
 | --- | --- | --- |
-| `/ui/live/` | `GET /server`, `GET /crawlers`, `GET /crawlers/{pid}/logs` + `/logs/stream` | `POST /crawlers/{pid}/stop` |
-| `/ui/schedules/` | `GET /schedules`, `GET /issues` | `POST /schedules/{spider}/run` |
-| `/ui/issues/` | `GET /issues`, `GET /spiders` | `POST /autofix` |
-| `/ui/fix/?task=…` | `GET /autofix/{task_id}` | `POST /autofix/approve`, `POST /autofix` |
+| `/live/` | `GET /server`, `GET /crawlers`, `GET /crawlers/{pid}/logs` + `/logs/stream` | `POST /crawlers/{pid}/stop` |
+| `/schedules/` | `GET /schedules`, `GET /issues` | `POST /schedules/{spider}/run` |
+| `/issues/` | `GET /issues`, `GET /spiders` | `POST /autofix` |
+| `/fix/?task=…` | `GET /api/autofix/{task_id}` | `POST /api/autofix/approve`, `POST /api/autofix` |
 
-`/` redirects to `/ui/live/`.
+`/` redirects to `/live/`.
 
 ### Why `/ui` and not `/`
 
-The API owns `/triage`, `/schedules`, `/crawlers`, `/spiders` and `/server` at
+The API owns `/triage`, `/api/schedules`, `/api/crawlers`, `/api/spiders` and `/api/server` at
 the root, and FastAPI matches those routes before any static mount. With the
-pages at `/`, a bare `/issues` would return 401 JSON instead of the page. The
+pages at `/`, a bare `/api/issues` would return 401 JSON instead of the page. The
 `basePath` in `next.config.mjs` and the mount in `app/main.py` must agree.
 
 ## Sign-in
@@ -54,7 +54,7 @@ venv/bin/uvicorn app.main:app --reload --port 8090   # terminal 1
 cd web && npm run dev                                # terminal 2 -> :3000
 ```
 
-Then open <http://localhost:3000/ui/live/> and set the API base URL to
+Then open <http://localhost:3000/live/> and set the API base URL to
 `http://localhost:8090` on the sign-in screen. `DEV_ORIGINS` in the ops `.env`
 already allows `localhost:3000`.
 
