@@ -38,7 +38,8 @@ LIST_TIMEOUT = int(os.environ.get("SCRAPY_LIST_TIMEOUT", "120"))
 def scan_files(root: str) -> dict[str, str]:
     """Regex scan: spider name -> path relative to root.
 
-    Only sees names written as a plain string literal.
+    Only sees names written as a plain string literal, and only ones that look
+    like spider names: a single token, no whitespace.
     """
     found: dict[str, str] = {}
     for dirpath, dirnames, filenames in os.walk(root):
@@ -54,6 +55,13 @@ def scan_files(root: str) -> dict[str, str]:
             except OSError:
                 continue
             for name in NAME_RE.findall(text):
+                # The pattern matches any indented `name = "..."`, which includes
+                # local variables inside parse methods -- the crawlers repo has
+                # `name = ' '.join(...)` in one. A spider name is a single token,
+                # the same rule scrapy_list applies to its output, so anything
+                # with whitespace is not one.
+                if not name.strip() or re.search(r"\s", name):
+                    continue
                 found.setdefault(name, os.path.relpath(path, root))
     return found
 
