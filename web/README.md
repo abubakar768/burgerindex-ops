@@ -15,6 +15,12 @@ The dashboard: live crawlers, schedules, issues and auto-fix review. Next.js
 
 `/` redirects to `/live/`.
 
+Navigation lives in a fixed left sidebar, which also carries the signed-in
+identity, the theme toggle and live counts for running crawlers and open
+issues. Page headers hold only what belongs to that page: its filters and
+actions. Under 900px the sidebar becomes a top strip -- a drawer would need
+open/close state for no gain at three destinations.
+
 ### Why `/ui` and not `/`
 
 The API owns `/triage`, `/api/schedules`, `/api/crawlers`, `/api/spiders` and `/api/server` at
@@ -75,7 +81,7 @@ deploys it. Rebuild and commit `web/out` whenever you change `web/src`.
 
 ```
 src/app/            one folder per screen, plus layout.tsx and the / redirect
-src/components/     shared chrome: Primitives, PageHeader, Table, Gate, Providers
+src/components/     shared chrome: Sidebar, Primitives, PageHeader, Table, Gate, Providers
 src/components/live/  the live page's log panel and stop controls
 src/lib/api.ts      typed client; one function per endpoint
 src/lib/types.ts    the API's response shapes

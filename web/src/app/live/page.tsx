@@ -199,8 +199,6 @@ export default function LiveCrawlersPage() {
                 onClick={() => setFilter(src)}
               />
             ))}
-            <NavButton href="/schedules">Schedules</NavButton>
-            <NavButton href="/issues">Issues</NavButton>
           </>
         }
       />

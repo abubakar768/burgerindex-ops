@@ -10,7 +10,7 @@ import type { Schedule, TriageRow } from '@/lib/types';
 import { useSession, useToast } from '@/components/Providers';
 import { PageHeader } from '@/components/PageHeader';
 import {
-  Button, EmptyState, FilterButton, NavButton, Pill, Tag, ui,
+  Button, EmptyState, FilterButton, Pill, Tag, ui,
 } from '@/components/Primitives';
 import { HeaderRow, Row, SkeletonRows, Table, TableFoot, cell } from '@/components/Table';
 import s from './schedules.module.css';
@@ -110,7 +110,7 @@ export default function SchedulesPage() {
   if (schedules.error?.isNotConfigured) {
     return (
       <div className={ui.wrap}>
-        <Header count={null} actions={<NavButton href="/live">Live crawlers</NavButton>} />
+        <Header count={null} actions={null} />
         <EmptyState
           title="Schedules are not configured"
           detail={(
@@ -150,7 +150,6 @@ export default function SchedulesPage() {
                 onClick={() => setGroup(g.key)}
               />
             ))}
-            <NavButton href="/live">Live crawlers</NavButton>
           </>
         )}
       />
