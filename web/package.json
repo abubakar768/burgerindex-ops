@@ -2,7 +2,7 @@
   "name": "burgerindex-ops-web",
   "version": "0.1.0",
   "private": true,
-  "description": "Crawler Operations Dashboard - static front end for the burgerindex-ops API.",
+  "description": "burgerindex ops - static front end for the burgerindex-ops API.",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",

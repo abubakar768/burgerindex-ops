@@ -56,10 +56,12 @@ export function Gate() {
       <form className={s.gateCard} onSubmit={onSubmit}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
-            <div className={s.eyebrow}>BURGERINDEX-OPS</div>
-            <h1 className={s.title} style={{ fontSize: 24, lineHeight: '32px', marginTop: 6 }}>
-              Crawler operations
+            <h1 className={s.title} style={{ fontSize: 24, lineHeight: '32px' }}>
+              burgerindex ops
             </h1>
+            <div className={s.sub} style={{ marginTop: 4 }}>
+              Live crawlers, schedules, issues and auto-fix.
+            </div>
           </div>
           <ThemeToggle />
         </div>

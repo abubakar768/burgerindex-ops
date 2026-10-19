@@ -1,8 +1,8 @@
-# burgerindex-ops dashboard
+# burgerindex ops
 
-The Crawler Operations Dashboard: live crawlers, schedules, triage and auto-fix
-review. Next.js (App Router, TypeScript), compiled to **static files** that the
-FastAPI app in `../app` serves. There is no Node runtime in production.
+The dashboard: live crawlers, schedules, issues and auto-fix review. Next.js
+(App Router, TypeScript), compiled to **static files** that the FastAPI app in
+`../app` serves. There is no Node runtime in production.
 
 ## Screens
 
