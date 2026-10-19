@@ -17,7 +17,7 @@ import s from './schedules.module.css';
 
 const COLS = '2.4fr 1.1fr 1.2fr 1.2fr 1.6fr 1.3fr';
 const REFRESH_MS = 30_000;
-const TRIAGE_DAYS = 7;
+const ISSUE_DAYS = 7;
 
 type Group = 'all' | FrequencyGroup;
 const GROUPS: Array<{ key: Group; label: string }> = [
@@ -48,16 +48,16 @@ export default function SchedulesPage() {
 
   const schedules = usePoll((signal) => api.schedules(signal), REFRESH_MS);
   // Used only to label the LAST RUN column: the scheduler DB stores a timestamp,
-  // not an outcome, so a matching triage row is what makes a failure visible.
-  const triage = usePoll((signal) => api.triage(TRIAGE_DAYS, signal), 120_000);
+  // not an outcome, so a matching issue row is what makes a failure visible.
+  const issues = usePoll((signal) => api.issues(ISSUE_DAYS, signal), 120_000);
 
   const failures = useMemo(() => {
     const byCrawler = new Map<string, TriageRow>();
-    for (const row of triage.data ?? []) {
+    for (const row of issues.data ?? []) {
       if (!byCrawler.has(row.crawler)) byCrawler.set(row.crawler, row);
     }
     return byCrawler;
-  }, [triage.data]);
+  }, [issues.data]);
 
   const decorated = useMemo<Decorated[]>(() => {
     const now = new Date();

@@ -121,6 +121,14 @@ def test_autofix_registry_uses_crawlers_repo(client):
     assert reg["slow-uae-crawl"]["repo"] == f"{ROOT}/crawlers"
 
 
+def test_issues_endpoint_and_deprecated_alias(client):
+    """The endpoint was renamed /triage -> /issues; the old path still answers."""
+    fresh = client.get("/issues?days=7")
+    legacy = client.get("/triage?days=7")
+    assert fresh.status_code == legacy.status_code == 200
+    assert fresh.json() == legacy.json()
+
+
 def test_dashboard_does_not_shadow_the_api(client):
     """The pages live under /ui, so the API keeps /triage and /schedules."""
     from app.main import DASHBOARD, WEB_DIR
@@ -128,6 +136,7 @@ def test_dashboard_does_not_shadow_the_api(client):
     assert DASHBOARD == "/ui"
     # A bare /schedules is the API, never a page: it answers JSON, not HTML.
     assert isinstance(client.get("/schedules").json(), list)
+    assert isinstance(client.get("/issues").json(), list)
 
     if not os.path.isdir(WEB_DIR):
         pytest.skip("web/out is not built")

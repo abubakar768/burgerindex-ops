@@ -39,12 +39,12 @@ function FixReview() {
         <PageHeader
           eyebrow="MODULE / FIX REVIEW"
           title="Fix review"
-          back={<Link href="/triage" className={ui.backLink}>← Back to triage</Link>}
+          back={<Link href="/issues" className={ui.backLink}>← Back to issues</Link>}
         />
         <EmptyState
           title="No fix selected"
-          detail="Open this page from the Fix button on a code-fixable row in triage."
-          action={<NavButton href="/triage">Go to triage</NavButton>}
+          detail="Open this page from the Fix button on a code-fixable row in Issues."
+          action={<NavButton href="/issues">Go to issues</NavButton>}
         />
       </div>
     );
@@ -108,10 +108,10 @@ function FixTask({ taskId }: { taskId: string }) {
 
   const reject = useCallback(() => {
     toast('Rejected. The branch and report stay in the worktree for manual review.', 'ok');
-    router.push('/triage');
+    router.push('/issues');
   }, [toast, router]);
 
-  const back = <Link href="/triage" className={ui.backLink}>← Back to triage</Link>;
+  const back = <Link href="/issues" className={ui.backLink}>← Back to issues</Link>;
 
   /* ----------------------------------------------------------- loading -- */
 
@@ -168,7 +168,7 @@ function FixTask({ taskId }: { taskId: string }) {
         <EmptyState
           title={`${categoryLabel(report.category)} is not fixed by changing the spider`}
           detail={`The rules suggest: ${report.action}. Handle it by hand, then re-run the crawler.`}
-          action={<NavButton href="/triage">Back to triage</NavButton>}
+          action={<NavButton href="/issues">Back to issues</NavButton>}
         />
       </div>
     );
@@ -426,7 +426,7 @@ function ReadyView({
                 </div>
                 <div className={s.actionNote}>
                   {ready
-                    ? 'Approve pushes the branch and opens a GitLab merge request. Retry queues a fresh attempt from the same failed job; the API takes no reviewer note yet. Reject leaves the branch in place and returns to triage.'
+                    ? 'Approve pushes the branch and opens a GitLab merge request. Retry queues a fresh attempt from the same failed job; the API takes no reviewer note yet. Reject leaves the branch in place and returns to Issues.'
                     : 'This report is not ready for review, so Approve is closed: the test crawl did not pass validation. Read the problems above, then retry or fix it by hand.'}
                 </div>
               </>

@@ -12,7 +12,7 @@ import {
   Banner, Button, CategoryChip, EmptyState, FilterButton, NavButton, Pill, StatCard, ui,
 } from '@/components/Primitives';
 import { HeaderRow, Row, SkeletonRows, Table, TableFoot, cell } from '@/components/Table';
-import s from './triage.module.css';
+import s from './issues.module.css';
 
 const COLS = '2.4fr 1.1fr 1.3fr 0.7fr 2.2fr 1.5fr';
 const REFRESH_MS = 120_000;
@@ -20,7 +20,7 @@ const DAYS = 7;
 
 type Filter = 'all' | 'p0' | 'fixable';
 
-export default function TriagePage() {
+export default function IssuesPage() {
   const { session } = useSession();
   const toast = useToast();
   const router = useRouter();
@@ -28,10 +28,10 @@ export default function TriagePage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [queueing, setQueueing] = useState<string | null>(null);
 
-  const triage = usePoll((signal) => api.triage(DAYS, signal), REFRESH_MS);
+  const issues = usePoll((signal) => api.issues(DAYS, signal), REFRESH_MS);
   const spiders = usePoll((signal) => api.spiders(signal), 0);
 
-  const rows = useMemo(() => triage.data ?? [], [triage.data]);
+  const rows = useMemo(() => issues.data ?? [], [issues.data]);
 
   const stats = useMemo(() => {
     const silent = rows.filter((r) => r.category === 'silent_drop');
@@ -101,11 +101,11 @@ export default function TriagePage() {
   return (
     <div className={ui.wrap}>
       <PageHeader
-        eyebrow="MODULE / TRIAGE"
-        title="Today's triage"
+        eyebrow="MODULE / ISSUES"
+        title="Today's issues"
         subtitle={`${utcDateLong(new Date().toISOString())} · last ${DAYS} days of runs, worst first`}
-        pills={triage.error
-          ? <Pill tone="warn">{triage.error.isAuth ? 'Token rejected' : 'Disconnected'}</Pill>
+        pills={issues.error
+          ? <Pill tone="warn">{issues.error.isAuth ? 'Token rejected' : 'Disconnected'}</Pill>
           : null}
         actions={(
           <>
@@ -124,8 +124,8 @@ export default function TriagePage() {
               active={filter === 'fixable'}
               onClick={() => setFilter('fixable')}
             />
-            <Button tone="solid" onClick={triage.refresh}>
-              {triage.loading ? 'Syncing…' : 'Sync'}
+            <Button tone="solid" onClick={issues.refresh}>
+              {issues.loading ? 'Syncing…' : 'Sync'}
             </Button>
             <NavButton href="/live">Live crawlers</NavButton>
           </>
@@ -137,25 +137,25 @@ export default function TriagePage() {
       <div className={ui.gridStats}>
         <StatCard
           label="FAILED"
-          value={triage.loading ? '—' : stats.failed.length}
+          value={issues.loading ? '—' : stats.failed.length}
           tone="hot"
           note={`${stats.failedFixable} need a code fix`}
         />
         <StatCard
           label="SILENT DROPS"
-          value={triage.loading ? '—' : stats.silent.length}
+          value={issues.loading ? '—' : stats.silent.length}
           tone="hot"
           note="success, under 40% of baseline"
         />
         <StatCard
           label="LOST RUNS"
-          value={triage.loading ? '—' : stats.lost.length}
+          value={issues.loading ? '—' : stats.lost.length}
           tone="plain"
           note="running far past their usual time"
         />
         <StatCard
           label="CODE-FIXABLE"
-          value={triage.loading ? '—' : stats.fixable.length}
+          value={issues.loading ? '—' : stats.fixable.length}
           tone="cool"
           note="Fix button available"
         />
@@ -167,15 +167,15 @@ export default function TriagePage() {
           labels={['CRAWLER', 'CLIENT', 'CATEGORY', 'STREAK', 'EVIDENCE', 'ACTION']}
         />
 
-        {triage.error ? (
+        {issues.error ? (
           <EmptyState
-            title="Could not load triage"
-            detail={triage.error.isOffline
-              ? 'The API is unreachable. Triage also needs the dashboard API (DASHBOARD_API) to answer.'
-              : triage.error.message}
-            action={<Button tone="ghost" onClick={triage.refresh}>Try again</Button>}
+            title="Could not load issues"
+            detail={issues.error.isOffline
+              ? 'The API is unreachable. Issues also needs the dashboard API (DASHBOARD_API) to answer.'
+              : issues.error.message}
+            action={<Button tone="ghost" onClick={issues.refresh}>Try again</Button>}
           />
-        ) : triage.loading ? (
+        ) : issues.loading ? (
           <SkeletonRows cols={COLS} count={8} />
         ) : visible.length === 0 ? (
           <EmptyState
@@ -186,7 +186,7 @@ export default function TriagePage() {
           />
         ) : (
           visible.map((row) => (
-            <TriageTableRow
+            <IssueRow
               key={`${row.crawler}-${row.jobId ?? row.category}`}
               row={row}
               busy={queueing !== null && queueing === row.jobId}
@@ -204,7 +204,7 @@ export default function TriagePage() {
   );
 }
 
-function TriageTableRow({
+function IssueRow({
   row, busy, onFix,
 }: { row: TriageRow; busy: boolean; onFix: () => void }) {
   const hotStreak = row.streak >= 2;

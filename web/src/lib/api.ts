@@ -99,8 +99,10 @@ export const api = {
       body: { user },
     }),
 
-  triage: (days = 7, signal?: AbortSignal) =>
-    request<TriageRow[]>(`/triage?days=${days}`, { signal }),
+  // The endpoint was renamed from /triage; the backend still answers the old
+  // path, but nothing here should call it.
+  issues: (days = 7, signal?: AbortSignal) =>
+    request<TriageRow[]>(`/issues?days=${days}`, { signal }),
 
   autofix: (jobId: string, user: string) =>
     request<AutofixQueued>('/autofix', { method: 'POST', body: { job_id: jobId, user } }),
