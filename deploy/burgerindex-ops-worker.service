@@ -9,6 +9,10 @@ EnvironmentFile=/home/arslan/arslan/projects/burgerindex-ops/.env
 ExecStart=/home/arslan/arslan/projects/burgerindex-ops/venv/bin/celery -A worker.celery_app worker -B -Q burgerindex-ops -c 2 --loglevel=INFO
 Restart=always
 KillMode=process
+# Creates /var/lib/burgerindex-ops owned by User= and exports $STATE_DIRECTORY.
+# P0 watch keeps its "already alerted" file there, so a reboot does not make it
+# re-alert every open P0.
+StateDirectory=burgerindex-ops
 
 [Install]
 WantedBy=multi-user.target
