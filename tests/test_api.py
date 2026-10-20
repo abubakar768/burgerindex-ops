@@ -1,5 +1,6 @@
 """Runs the API against a tiny local crawlers project and a SQLite 'scheduler' DB."""
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -42,7 +43,14 @@ class Slow(scrapy.Spider):
 
 @pytest.fixture(scope="module")
 def client():
-    if not os.path.exists(f"{ROOT}/crawlers/scrapy.cfg"):
+    # ROOT lives in /tmp, which macOS sweeps of files untouched for a few days.
+    # That reaps proj/settings.py while leaving scrapy.cfg and the directories,
+    # so guarding on scrapy.cfg alone leaves a half-project that `scrapy crawl`
+    # cannot load ("No module named 'proj.settings'") -- and the crawl dies
+    # before it writes a log, which reads here as "the spider never started".
+    # Check the settings module too, and rebuild from scratch when it is gone.
+    if not os.path.exists(f"{ROOT}/crawlers/proj/settings.py"):
+        shutil.rmtree(f"{ROOT}/crawlers", ignore_errors=True)
         subprocess.run([SCRAPY, "startproject", "proj", f"{ROOT}/crawlers"], check=True, capture_output=True)
     open(f"{ROOT}/crawlers/proj/spiders/slow.py", "w").write(SPIDER)
     con = sqlite3.connect(DB)

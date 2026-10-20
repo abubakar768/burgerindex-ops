@@ -226,6 +226,7 @@ CRAWLER_LOG_DIR={ROOT}/logs
 HEARTBEAT_DIR={ROOT}/hb
 MEMUSAGE_LIMIT_MB=2000
 AUDIT_LOG={ROOT}/audit.jsonl
+P0_WATCH_STATE={ROOT}/p0_watch_state.json
 SCHEDULER_DB_URL=sqlite:///{DB}
 SCHEDULES_SQL={SCHEDULES_SQL}
 DASHBOARD_API=http://127.0.0.1:{DASH_PORT}
@@ -294,6 +295,7 @@ def smoke() -> int:
     for k, v in [("API_TOKEN", "sandbox-token"), ("CRAWLERS_DIR", PROJ), ("SCRAPY_BIN", scrapy_bin()),
                  ("CRAWLER_LOG_DIR", f"{ROOT}/logs"), ("HEARTBEAT_DIR", f"{ROOT}/hb"),
                  ("AUDIT_LOG", f"{ROOT}/audit.jsonl"), ("SCHEDULER_DB_URL", f"sqlite:///{DB}"),
+                 ("P0_WATCH_STATE", f"{ROOT}/p0_watch_state.json"),
                  ("SCHEDULES_SQL", SCHEDULES_SQL), ("DASHBOARD_API", f"http://127.0.0.1:{DASH_PORT}"),
                  ("P0_CRAWLERS", P0)]:
         os.environ[k] = v
