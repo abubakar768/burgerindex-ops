@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     CRAWLER_LOG_DIR: str = "/var/log/crawlers"
     HEARTBEAT_DIR: str = "/var/crawler-heartbeat"
     AUDIT_LOG: str = "/var/log/burgerindex-ops/audit.jsonl"
+    # Where P0 watch remembers which issues it has already alerted on. Must be
+    # persistent: an empty state file re-alerts every open P0 at once. Blank
+    # means $STATE_DIRECTORY from systemd, else /var/lib/burgerindex-ops.
+    P0_WATCH_STATE: str = ""
 
     # Dashboard + alerts
     DASHBOARD_API: str = "https://data-ingest-dashboard.replit.app"
@@ -66,6 +70,7 @@ for name, value in {
     "CRAWLER_LOG_DIR": settings.CRAWLER_LOG_DIR,
     "CRAWLER_LOG_DIRS": settings.CRAWLER_LOG_DIR,
     "HEARTBEAT_DIR": settings.HEARTBEAT_DIR,
+    "P0_WATCH_STATE": settings.P0_WATCH_STATE,
     "SCRAPY_BIN": settings.SCRAPY_BIN,
     "AUTOFIX_WORK": settings.AUTOFIX_WORK,
     "AUTOFIX_REPO": settings.AUTOFIX_REPO or settings.CRAWLERS_DIR,

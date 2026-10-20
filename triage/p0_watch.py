@@ -4,6 +4,9 @@
         python -m triage.p0_watch --p0-client Talabat >> /var/log/p0_watch.log 2>&1
 
 Alerts once per (crawler, job, category); state kept in a small JSON file.
+That file must survive reboots: losing it re-alerts every open P0 at once, so
+it lives under /var/lib, not /tmp. The worker unit creates the directory
+(StateDirectory=), and $STATE_DIRECTORY is honoured when systemd sets it.
 """
 from __future__ import annotations
 
@@ -16,7 +19,8 @@ import requests
 from .cli import DEFAULT_BASE, fetch_jobs, p0_crawlers_for
 from .history import triage
 
-STATE = os.environ.get("P0_WATCH_STATE", "/tmp/p0_watch_state.json")
+DEFAULT_STATE_DIR = os.environ.get("STATE_DIRECTORY") or "/var/lib/burgerindex-ops"
+STATE = os.environ.get("P0_WATCH_STATE") or os.path.join(DEFAULT_STATE_DIR, "p0_watch_state.json")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -44,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
             requests.post(os.environ["SLACK_WEBHOOK_URL"], json={"text": text}, timeout=15)
         seen.add(f"{r['crawler']}|{r['jobId']}|{r['category']}")
 
+    os.makedirs(os.path.dirname(STATE) or ".", exist_ok=True)
     with open(STATE, "w") as f:
         json.dump(sorted(seen), f)
     print(f"{len(rows)} open P0 issues, {len(new)} new alerts")
