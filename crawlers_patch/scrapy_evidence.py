@@ -8,11 +8,17 @@ Writes to EVIDENCE_DIR/<spider>/<job_id>/ and, if EVIDENCE_S3_BUCKET is set, upl
 The folder path is put into stats as `evidence/path`, so it lands in rawStats
 and the dashboard can link to it.
 
-settings.py:
-    EXTENSIONS = {"evidence.scrapy_evidence.EvidenceExtension": 500}
+Runs inside each crawl process -- one instance per `scrapy crawl`, not a
+service. Install and wire it up per README.md in this folder. Settings it reads:
+
     EVIDENCE_DIR = "/var/crawler-evidence"
     EVIDENCE_S3_BUCKET = "my-bucket"          # optional
     EVIDENCE_ONLY_ON_FAILURE = True           # keep files only if the run looks bad
+    EVIDENCE_LOG_LINES = 200
+    EVIDENCE_MAX_SAMPLES = 3
+
+Unset EVIDENCE_DIR raises NotConfigured, which Scrapy treats as "skip this
+extension" -- a crawl never fails because of it.
 """
 from __future__ import annotations
 

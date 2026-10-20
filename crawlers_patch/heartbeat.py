@@ -3,11 +3,19 @@
 Gives the dashboard request count, items, errors and memory for RUNNING crawls,
 and a heartbeat: no update for a few intervals = frozen spider.
 
-settings.py:
-    EXTENSIONS = {"evidence.heartbeat.HeartbeatExtension": 510}
-    HEARTBEAT_DIR = "/var/crawler-heartbeat"
-    HEARTBEAT_INTERVAL = 30      # seconds
-    HEARTBEAT_URL = ""           # optional: also POST the JSON here
+Runs inside each crawl process, on the Twisted reactor -- one instance per
+`scrapy crawl`, not a service.
+
+Install and wire it up per README.md in this folder: the entry goes into the
+crawlers repo's EXTENSIONS dict, which already has entries and must not be
+reassigned. Settings it reads:
+
+    HEARTBEAT_DIR = "/var/crawler-heartbeat"   # must equal the ops .env
+    HEARTBEAT_INTERVAL = 30                    # seconds
+    HEARTBEAT_URL = ""                         # optional: also POST the JSON here
+
+Unset HEARTBEAT_DIR raises NotConfigured, which Scrapy treats as "skip this
+extension" -- a crawl never fails because of it.
 """
 from __future__ import annotations
 
