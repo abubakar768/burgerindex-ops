@@ -17,18 +17,21 @@ _Nothing claimed. Add a line here when you pick something up._
 | 4 | Open the crawlers repo PR from `crawlers_patch/` | heartbeat + evidence extensions, memory limits, log files — the Live page's heartbeat and P0 columns depend on it |
 | 5 | Exercise auto-fix end to end on the VM | needs git, scrapy, the `crawlers-autofix` clone and the Claude Code CLI on the worker |
 | 6 | Decide on tagging scheduler launches `CRAWL_SOURCE=scheduler` | would let the Live page tell scheduled from manual runs; a change in the scheduler repo |
-| 7 | `test_run_list_logs_stop` fails on macOS | the started crawl is not listed; expected to be the Linux-only process detail the README warns about — confirm on the VM, then skip it locally rather than leaving a red suite |
 
 ## Known gaps
 
 - No measurement of classification accuracy, so the `/issues/` sort order is
   trusted on faith. See PRD §6.
 - ~~P0 watch state lives in a JSON file (`P0_WATCH_STATE`, `/tmp` by default) —
-  wiping it re-alerts every open P0.~~ Fixed in #14: it moves to
-  `/var/lib/burgerindex-ops`, created by the worker unit's `StateDirectory=`.
+  wiping it re-alerts every open P0.~~ Fixed in #14 (moved to
+  `/var/lib/burgerindex-ops`, created by the worker unit's `StateDirectory=`)
+  and #15 (local dev and the sandbox set their own path).
 - Process details (log path, other users' env) are Linux-only; local runs on
   macOS show less than the VM will.
 - No alert if burgerindex-ops itself is down; `/health` exists but nothing polls it.
+- Test fixtures live in `/tmp`, which macOS sweeps every few days. `test_api.py`
+  now rebuilds a half-swept scrapy project (#15); other `/tmp` state may hit the
+  same thing. A swept fixture looks like a product bug, not a stale directory.
 
 ## Done
 
