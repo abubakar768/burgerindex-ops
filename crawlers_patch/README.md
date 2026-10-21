@@ -88,15 +88,28 @@ EVIDENCE_LOG_LINES = 200
 EVIDENCE_MAX_SAMPLES = 3
 EVIDENCE_S3_BUCKET = ""                    # optional upload
 
-# memory, so the dashboard's RAM column has a limit to draw against
-MEMUSAGE_ENABLED = True
-MEMUSAGE_WARNING_MB = 1500                 # override per spider in custom_settings
-MEMUSAGE_LIMIT_MB = 2000                   # must equal MEMUSAGE_LIMIT_MB in the ops .env
 ```
 
-`HEARTBEAT_DIR` and `MEMUSAGE_LIMIT_MB` appear in both projects. They are not
-shared through code — the crawlers write, burgerindex-ops reads — so a change
-on one side needs the same change on the other.
+`scrapy_evidence.py` can be left out until auto-fix is being tested: it hooks
+every response, which the Live crawlers page does not need.
+
+`HEARTBEAT_DIR` appears in both projects. They are not shared through code (the
+crawlers write, burgerindex-ops reads), so a change on one side needs the same
+change on the other.
+
+### Do not copy a memory limit from here
+
+Earlier versions of this README set `MEMUSAGE_LIMIT_MB = 2000`. **That is a
+kill limit, not a display value.** Scrapy's default is no limit
+(`MEMUSAGE_LIMIT_MB = 0`), and a spider that exceeds one is closed with reason
+`memusage_exceeded`. The crawlers repo sets none today and no spider sets its
+own, while several drive a browser and can legitimately pass 2 GB, so a global
+2000 would start ending healthy crawls.
+
+The dashboard does not need one. Leave `MEMUSAGE_LIMIT_MB=0` in the ops `.env`
+and the RAM column shows usage without a limit bar. Add a limit only as a
+deliberate decision about what a runaway crawl should cost, set per spider in
+`custom_settings`, and mirror it in the ops `.env` only if the bar is wanted.
 
 Create the directories ahead of time and make them writable by the user the
 crawls run as. A directory that cannot be created is survivable now, but the

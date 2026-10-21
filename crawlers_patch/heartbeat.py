@@ -6,9 +6,9 @@ and a heartbeat: no update for a few intervals = frozen spider.
 Runs inside each crawl process, on the Twisted reactor -- one instance per
 `scrapy crawl`, not a service.
 
-Install and wire it up per README.md in this folder: the entry goes into the
-crawlers repo's EXTENSIONS dict, which already has entries and must not be
-reassigned. Settings it reads:
+Install and wire it up per crawlers_patch/README.md in the burgerindex-ops repo.
+The entry goes into the crawlers repo's EXTENSIONS dict, which already has
+entries and must not be reassigned. Settings it reads:
 
     HEARTBEAT_DIR = "/var/crawler-heartbeat"   # must equal the ops .env
     HEARTBEAT_INTERVAL = 30                    # seconds

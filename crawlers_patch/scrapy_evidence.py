@@ -9,7 +9,8 @@ The folder path is put into stats as `evidence/path`, so it lands in rawStats
 and the dashboard can link to it.
 
 Runs inside each crawl process -- one instance per `scrapy crawl`, not a
-service. Install and wire it up per README.md in this folder. Settings it reads:
+service. Install and wire it up per crawlers_patch/README.md in the burgerindex-ops
+repo. Settings it reads:
 
     EVIDENCE_DIR = "/var/crawler-evidence"
     EVIDENCE_S3_BUCKET = "my-bucket"          # optional
