@@ -98,8 +98,12 @@ def install_heartbeat() -> None:
     """Copy crawlers_patch/heartbeat.py into the sandbox project and enable it."""
     patch = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          "crawlers_patch", "heartbeat.py")
-    # Top level, beside scrapy.cfg -- the same place it sits in the crawlers repo,
-    # and what makes "evidence.heartbeat..." importable from the crawl cwd.
+    # A top-level package beside scrapy.cfg, which is what makes
+    # "evidence.heartbeat..." importable from the crawl cwd. The real crawlers
+    # repo puts it at burgerindex/extensions/ instead, beside its own
+    # crawlerstats.py -- see crawlers_patch/README.md. The sandbox project has
+    # no such package, so it uses its own path; only the file contents and the
+    # heartbeat JSON shape are shared.
     pkg = f"{PROJ}/evidence"
     os.makedirs(pkg, exist_ok=True)
     open(f"{pkg}/__init__.py", "w").close()
