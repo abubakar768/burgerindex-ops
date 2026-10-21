@@ -19,7 +19,7 @@ import http.server
 import json
 import os
 import shutil
-import socketserver
+import signal
 import sqlite3
 import subprocess
 import sys
@@ -259,23 +259,49 @@ class DashHandler(http.server.BaseHTTPRequestHandler):
         pass
 
 
+class _QuietFiles(http.server.SimpleHTTPRequestHandler):
+    """Serves the sandbox folder to the sandbox spiders, without a log line per hit."""
+
+    def log_message(self, *args):
+        pass
+
+
+def _bind(port: int, handler, what: str):
+    """Bind on loopback, or stop with a message that says what to do about it.
+
+    The target used to be a `python -m http.server` child whose stderr went to
+    DEVNULL, so a port still held by a leftover from an earlier run failed
+    silently: the new server never started, the old one kept answering, and the
+    spiders saw its 404s.
+    """
+    try:
+        return http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
+    except OSError as e:
+        sys.exit(f"cannot start the {what}: port {port} is in use ({e}).\n"
+                 f"Usually a leftover from an earlier run. Find it with:\n"
+                 f"  lsof -nP -iTCP:{port} -sTCP:LISTEN")
+
+
 def start_services() -> list:
-    """The crawl target and the fake dashboard."""
-    procs = []
-    procs.append(subprocess.Popen([sys.executable, "-m", "http.server", str(TARGET_PORT)],
-                                  cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
-    socketserver.TCPServer.allow_reuse_address = True
-    dash = socketserver.TCPServer(("127.0.0.1", DASH_PORT), DashHandler)
-    threading.Thread(target=dash.serve_forever, daemon=True).start()
-    procs.append(dash)
-    time.sleep(1)
-    return procs
+    """The crawl target and the fake dashboard.
+
+    Both run as threads in this process, not as children. A child outlives a
+    parent that is killed, and then keeps its port: that is how a stopped `serve`
+    stranded an http.server on 8777 for days. A thread cannot be orphaned, even
+    by SIGKILL, because the socket closes when the process does.
+    """
+    target = _bind(TARGET_PORT, functools.partial(_QuietFiles, directory=ROOT), "crawl target")
+    dash = _bind(DASH_PORT, DashHandler, "fake dashboard")
+    for server in (target, dash):
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+    return [target, dash]
 
 
-def stop_services(procs) -> None:
-    for p in procs:
+def stop_services(servers) -> None:
+    for s in servers:
         try:
-            p.shutdown() if isinstance(p, socketserver.TCPServer) else p.terminate()
+            s.shutdown()
+            s.server_close()
         except Exception:
             pass
 
@@ -431,6 +457,14 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("mode", choices=["smoke", "serve", "setup", "clean"])
     mode = ap.parse_args().mode
+
+    def _exit_cleanly(signum, frame):
+        # The default SIGTERM action ends the process without running `finally`.
+        # smoke starts crawls that are detached on purpose, so a killed run left
+        # a 4000-request crawl running with nobody to stop it.
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, _exit_cleanly)
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     raise SystemExit({"smoke": smoke, "serve": serve, "clean": clean,
                       "setup": lambda: (setup(), 0)[1]}[mode]())
