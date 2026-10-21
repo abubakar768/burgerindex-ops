@@ -9,8 +9,20 @@ installed in the crawlers repo and switched on in its `settings.py`.
 | `heartbeat.py` | live ITEMS / REQUESTS / HEARTBEAT columns, the "may be frozen" banner | those three columns read `—` |
 | `scrapy_evidence.py` | log tail and bad responses for auto-fix to read | the agent gets "(no evidence folder saved for this run)" |
 
-Neither breaks a crawl when it is missing or unconfigured: both raise
-`NotConfigured`, which Scrapy treats as "skip this extension".
+Neither stops a crawl, and this was checked with real `scrapy` crawls rather
+than assumed:
+
+| Situation | `heartbeat.py` | `scrapy_evidence.py` |
+| --- | --- | --- |
+| directory setting unset | `NotConfigured`: skipped | `NotConfigured`: skipped |
+| directory cannot be created | `NotConfigured`: skipped, warning logged | crawl runs; the failure is logged when the spider closes and that run's evidence is lost |
+| a write fails mid-crawl | logged, retried next beat | logged by Scrapy, crawl continues |
+
+The middle row is the one that matters. Scrapy only skips an extension on
+`NotConfigured`; any other exception out of `from_crawler` stops the crawl from
+starting. An earlier version of `heartbeat.py` let the `PermissionError` from
+`os.makedirs` escape, which would have failed **every** crawl on any machine
+where `HEARTBEAT_DIR` was not writable by the user running it.
 
 ## 1. Copy the files
 
@@ -86,7 +98,9 @@ MEMUSAGE_LIMIT_MB = 2000                   # must equal MEMUSAGE_LIMIT_MB in the
 shared through code — the crawlers write, burgerindex-ops reads — so a change
 on one side needs the same change on the other.
 
-The directories must exist and be writable by the user the crawls run as.
+Create the directories ahead of time and make them writable by the user the
+crawls run as. A directory that cannot be created is survivable now, but the
+extension then does nothing and the dashboard columns stay blank.
 
 ## 4. Log files
 

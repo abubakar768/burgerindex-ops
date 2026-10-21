@@ -14,12 +14,15 @@ reassigned. Settings it reads:
     HEARTBEAT_INTERVAL = 30                    # seconds
     HEARTBEAT_URL = ""                         # optional: also POST the JSON here
 
-Unset HEARTBEAT_DIR raises NotConfigured, which Scrapy treats as "skip this
-extension" -- a crawl never fails because of it.
+A monitoring extension must never stop the crawl it watches. Unset HEARTBEAT_DIR
+and a directory that cannot be created both raise NotConfigured, which Scrapy
+treats as "skip this extension" and logs as a warning. A write that fails
+mid-crawl is logged and the next beat tries again.
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import resource
 import time
@@ -27,6 +30,8 @@ import time
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from twisted.internet import task
+
+log = logging.getLogger(__name__)
 
 KEYS = {
     "items": "item_scraped_count",
@@ -51,7 +56,13 @@ class HeartbeatExtension:
         self.crawler, self.stats = crawler, crawler.stats
         self.dir, self.interval, self.url = directory, interval, url
         self.loop = None
-        os.makedirs(directory, exist_ok=True)
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except OSError as e:
+            # Left to propagate, this is a PermissionError out of from_crawler, and
+            # Scrapy only skips an extension on NotConfigured: every crawl on a
+            # machine where the directory is not writable would fail to start.
+            raise NotConfigured(f"HEARTBEAT_DIR {directory!r} is not usable: {e}")
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -75,9 +86,14 @@ class HeartbeatExtension:
         data.update(spider=self.spider.name, pid=os.getpid(), state=state, ts=time.time(),
                     rss_mb=_rss_mb(), finish_reason=reason)
         tmp = self.path + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp, self.path)  # atomic: readers never see half a file
+        try:
+            with open(tmp, "w") as f:
+                json.dump(data, f)
+            os.replace(tmp, self.path)  # atomic: readers never see half a file
+        except OSError as e:
+            # An exception escaping a LoopingCall stops it for good, and a stale
+            # file then reads as a frozen spider. One failed write must not do that.
+            log.warning("heartbeat write failed, will retry next beat: %s", e)
         if self.url:
             try:
                 import requests
