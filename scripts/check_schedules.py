@@ -30,6 +30,7 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import settings
+from app.services.schedules import split_spider
 from app.services.spiders import discover
 
 REQUIRED = {"spider", "schedule", "enabled"}
@@ -179,7 +180,8 @@ def main() -> int:
 
     section("5. Spider allow-list")
     known = discover()
-    unknown = sorted({r["spider"] for r in rows if r.get("spider") and r["spider"] not in known})
+    names = {split_spider(r["spider"])[0] for r in rows if r.get("spider")}
+    unknown = sorted(n for n in names if n not in known)
     ok(f"{len(known)} spiders discovered in {settings.CRAWLERS_DIR}")
     if unknown:
         warn(f"{len(unknown)} scheduled spiders are not in the crawlers repo; Run will refuse them:")

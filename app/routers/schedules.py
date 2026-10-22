@@ -28,9 +28,17 @@ def schedules():
     except NotConfigured as e:
         raise HTTPException(501, str(e))
     running = {c["spider"]: c["pid"] for c in list_crawlers()}
+    # A schedule can outlive its spider (renamed or deleted in the crawlers
+    # repo). The scheduler keeps firing it and every run dies on "KeyError:
+    # Spider not found", so flag it; Run would 404 on it anyway. While only the
+    # source scan is available the answer is unknown (None), not "missing":
+    # the scan misses every spider whose name is composed at import.
+    known = spiders.discover()
+    sure = spiders.authoritative()
     for r in rows:
         r["running_pid"] = running.get(r["spider"])
         r["p0"] = r["spider"] in settings.p0_set
+        r["in_repo"] = True if r["spider"] in known else (False if sure else None)
     return rows
 
 

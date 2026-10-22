@@ -52,9 +52,9 @@ def project():
 
 @pytest.fixture(autouse=True)
 def _clear_cache():
-    spiders.discover.cache_clear()
+    spiders.clear()
     yield
-    spiders.discover.cache_clear()
+    spiders.clear()
 
 
 def test_scan_misses_composed_names(project):
@@ -126,3 +126,33 @@ def test_scan_skips_local_variables_that_look_like_names(tmp_path):
     found = scan_files(str(tmp_path))
     assert "real-uae-crawl" in found
     assert all(n.strip() and " " not in n for n in found), found
+
+
+def test_failed_list_is_retried_not_kept(project, monkeypatch):
+    """The crawlers fetch exchange rates at import, so `scrapy list` fails
+    whenever that host is slow. A scan-only answer must not stick."""
+    monkeypatch.setattr(settings, "CRAWLERS_DIR", project)
+    monkeypatch.setattr(settings, "SCRAPY_BIN", "/nonexistent/scrapy")
+    assert "composed-ksa-crawl" not in spiders.discover()
+    assert not spiders.authoritative()
+    monkeypatch.setattr(settings, "SCRAPY_BIN", SCRAPY)
+    monkeypatch.setattr(spiders, "RETRY_SECONDS", 0)
+    assert "composed-ksa-crawl" in spiders.discover()
+    assert spiders.authoritative()
+
+
+def test_failed_refresh_keeps_the_good_list(project, monkeypatch):
+    monkeypatch.setattr(settings, "CRAWLERS_DIR", project)
+    monkeypatch.setattr(settings, "SCRAPY_BIN", SCRAPY)
+    good = spiders.discover()
+    monkeypatch.setattr(settings, "SCRAPY_BIN", "/nonexistent/scrapy")
+    assert spiders.refresh() == good
+    assert spiders.discover() == good and spiders.authoritative()
+
+
+def test_scan_only_names_are_not_runnable(project, monkeypatch):
+    """A mixin's `name` is matched by the scan but is not a spider scrapy can run."""
+    monkeypatch.setattr(settings, "CRAWLERS_DIR", project)
+    monkeypatch.setattr(settings, "SCRAPY_BIN", SCRAPY)
+    assert "composed" in spiders.scan_files(project)
+    assert "composed" not in spiders.discover()
