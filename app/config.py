@@ -13,7 +13,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # OPS_ENV_FILE picks another file, e.g. .env.local on a Mac. uvicorn has
+    # --env-file but celery has nothing like it, and the worker must read the
+    # same file as the API or the two disagree about AUTOFIX_REPO and REDIS_URL.
+    model_config = SettingsConfigDict(env_file=os.environ.get("OPS_ENV_FILE", ".env"), extra="ignore")
 
     API_TOKEN: str = "change-me"
 
@@ -46,7 +49,7 @@ class Settings(BaseSettings):
     GITLAB_URL: str = "https://gitlab.com"
     GITLAB_PROJECT_ID: str = ""
     GITLAB_TOKEN: str = ""
-    GITLAB_TARGET: str = "main"
+    GITLAB_TARGET: str = "master"           # the crawlers repo's default branch
 
     # Origins allowed to call this API from a browser, besides DASHBOARD_API.
     # Only needed while running the Next.js dev server separately.
