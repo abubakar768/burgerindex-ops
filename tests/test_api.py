@@ -57,6 +57,8 @@ def client():
     con.execute("DROP TABLE IF EXISTS schedules")
     con.execute("CREATE TABLE schedules (spider TEXT, schedule TEXT, enabled INT, last_run_at TEXT)")
     con.execute("INSERT INTO schedules VALUES ('slow-uae-crawl', '0 6 * * *', 1, '2026-10-13T06:00')")
+    con.execute("INSERT INTO schedules VALUES ('renamed-uae-crawl', '0 3 * * *', 1, NULL)")
+    con.execute("INSERT INTO schedules VALUES ('slow-uae-crawl -a hour=8:00', '0 8 * * *', 1, NULL)")
     con.commit()
     site = subprocess.Popen([sys.executable, "-m", "http.server", "8777"], cwd=ROOT,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -97,8 +99,15 @@ def test_spiders_found_in_crawlers_repo(client):
 
 
 def test_schedules_from_scheduler_db(client):
-    rows = client.get("/api/schedules").json()
-    assert rows[0]["spider"] == "slow-uae-crawl" and rows[0]["running_pid"] is None
+    rows = {r["spider"]: r for r in client.get("/api/schedules").json()}
+    assert rows["slow-uae-crawl"]["running_pid"] is None
+    # Scheduled but no longer a spider in the repo: flagged, and Run refuses it.
+    assert rows["slow-uae-crawl"]["in_repo"] and not rows["renamed-uae-crawl"]["in_repo"]
+    assert client.post("/api/schedules/renamed-uae-crawl/run", json={"user": "abubakar"}).status_code == 404
+    # The scheduler stores a command fragment; the spider is its first token.
+    with_args = [r for r in client.get("/api/schedules").json() if r["args"]]
+    assert [(r["spider"], r["args"], r["in_repo"]) for r in with_args] == [
+        ("slow-uae-crawl", "-a hour=8:00", True)]
 
 
 def test_run_list_logs_stop(client):

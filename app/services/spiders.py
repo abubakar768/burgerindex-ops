@@ -15,6 +15,12 @@ defines it (`scrapy list` prints names only), and as a fallback when scrapy
 cannot run at all. A name with no known file maps to "" -- auto-fix only
 interpolates the path into a prompt, so an unknown file degrades rather than
 breaks.
+
+`scrapy list` imports every spider, and the crawlers do network I/O at import
+(utils/currency_converter.py fetches exchange rates with no timeout). So it
+fails whenever that host is slow, and the scan behind it finds about half the
+spiders. A scan-only answer is therefore never kept for long, and never
+replaces a good `scrapy list` result already held.
 """
 from __future__ import annotations
 
@@ -22,7 +28,7 @@ import logging
 import os
 import re
 import subprocess
-from functools import lru_cache
+import time
 
 from monitor.project import project_root
 
@@ -33,6 +39,13 @@ log = logging.getLogger(__name__)
 NAME_RE = re.compile(r"""^\s+name\s*=\s*['"]([^'"]+)['"]""", re.M)
 SKIP = {".git", "venv", ".venv", "node_modules", "__pycache__"}
 LIST_TIMEOUT = int(os.environ.get("SCRAPY_LIST_TIMEOUT", "120"))
+# How long a scan-only answer stands in before `scrapy list` is tried again.
+RETRY_SECONDS = 300
+
+# root -> result of the last `scrapy list` that worked
+_good: dict[str, dict[str, str]] = {}
+# root -> (monotonic time, scan-only result) after `scrapy list` failed
+_fallback: dict[str, tuple[float, dict[str, str]]] = {}
 
 
 def scan_files(root: str) -> dict[str, str]:
@@ -113,21 +126,46 @@ def scrapy_list(root: str) -> list[str] | None:
     return names
 
 
-@lru_cache(maxsize=1)
 def discover(root: str | None = None) -> dict[str, str]:
     root = root or settings.CRAWLERS_DIR
+    if root in _good:
+        return _good[root]
+    hit = _fallback.get(root)
+    if hit and time.monotonic() - hit[0] < RETRY_SECONDS:
+        return hit[1]
     by_file = scan_files(root)
     names = scrapy_list(root)
     if names is None:
+        _fallback[root] = (time.monotonic(), by_file)
         return by_file
+    # Only what scrapy lists. The scan also matches mixin and base-class names
+    # (`name = "albaik"` on a class that `albaik-ksa-crawl` extends) -- 148 of
+    # them in the crawlers repo -- and `scrapy crawl` resolves names with the
+    # same loader as `scrapy list`, so anything it omits fails "Spider not found".
     found = {name: by_file.get(name, "") for name in names}
-    # Keep anything the scan saw but scrapy did not report, so a partially
-    # broken project never shrinks the allow-list below today's behaviour.
-    for name, rel in by_file.items():
-        found.setdefault(name, rel)
+    _good[root] = found
+    _fallback.pop(root, None)
     return found
 
 
+def authoritative(root: str | None = None) -> bool:
+    """True when discover() reflects `scrapy list`, not just the source scan."""
+    return (root or settings.CRAWLERS_DIR) in _good
+
+
 def refresh() -> dict[str, str]:
-    discover.cache_clear()
-    return discover()
+    root = settings.CRAWLERS_DIR
+    previous = _good.pop(root, None)
+    _fallback.pop(root, None)
+    found = discover(root)
+    if previous is not None and not authoritative(root):
+        log.warning("`scrapy list` failed on refresh; keeping the previous %d spiders", len(previous))
+        _good[root] = previous
+        _fallback.pop(root, None)
+        return previous
+    return found
+
+
+def clear() -> None:
+    _good.clear()
+    _fallback.clear()

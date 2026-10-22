@@ -16,3 +16,5 @@
 
 .queued { display: inline-flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .queuedLabel { font-weight: 600; color: var(--accent-text); }
+
+.divider { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }

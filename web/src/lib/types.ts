@@ -76,6 +76,8 @@ export interface Spider {
 /** GET /schedules */
 export interface Schedule {
   spider: string;
+  /** Spider arguments the scheduler passes after the name, e.g. "-a hour=8:00"; "" if none. */
+  args: string;
   /** django_celery_beat crontab: "minute hour day_of_month month_of_year day_of_week" */
   schedule: string;
   enabled: boolean;
@@ -83,6 +85,12 @@ export interface Schedule {
   client?: string | null;
   running_pid: number | null;
   p0: boolean;
+  /**
+   * False when no spider of this name is in CRAWLERS_DIR: every scheduled run of
+   * it fails. Null when the API only has the source scan (`scrapy list` failed),
+   * which misses composed names, so "missing" cannot be told apart from "unseen".
+   */
+  in_repo: boolean | null;
 }
 
 /** POST /schedules/{spider}/run */

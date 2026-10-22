@@ -23,10 +23,16 @@ autofix/        Claude Code fix pipeline + validation
 worker/         Celery: autofix + P0 watch (queue: burgerindex-ops)
 crawlers_patch/ files + settings for the crawlers repo PR
 deploy/         systemd units for the VM
-tests/          26 tests (API run/stop/logs cycle, rules, dashboard mount)
+scripts/local/  Mac-only: safe SCRAPY_BIN wrapper, up.sh (API + worker)
+docs/           local-dev.md: the whole stack on a Mac
+tests/          pytest -q (API run/stop/logs cycle, rules, autofix safety, dashboard mount)
 ```
 
 ## Local (Mac)
+
+The quick version below runs the API alone. For everything -- real schedules,
+the worker, Run and autofix against the real crawlers repo with nothing reaching
+production -- follow [docs/local-dev.md](docs/local-dev.md).
 
 ```bash
 cd ~/Desktop/burgerindex_projects

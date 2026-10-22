@@ -25,7 +25,11 @@ These are load-bearing. Breaking one causes damage that is not obvious in tests.
    with `start_new_session=True` (see `monitor/trigger.py`).
 6. **Run is allow-listed.** Only spiders from `app/services/spiders.py:discover`
    can be started, and never a second copy of one already running.
-7. **Every mutating action is audited.** Stop, Run, autofix and Approve write to
+7. **Never run burgerindex-scheduler's beat or worker on a dev machine.** Its
+   `start_crawl` is a plain `scrapy crawl` with every pipeline on, so each
+   enabled schedule becomes a production write. Locally, schedules are synced
+   into Postgres as rows only; see [docs/local-dev.md](docs/local-dev.md).
+8. **Every mutating action is audited.** Stop, Run, autofix and Approve write to
    `AUDIT_LOG` with the operator's name. A new mutating endpoint must too.
 
 ## Conventions

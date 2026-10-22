@@ -137,6 +137,7 @@
 .srcManual { color: var(--src-manual-ink); background: var(--src-manual-bg); border-color: var(--src-manual-line); font-weight: 600; }
 .envStaging { color: var(--warn-ink); border-color: var(--warn-edge-2); }
 .muted { color: var(--ink-4); border-color: var(--line); }
+.tagWarn { color: var(--warn-ink); background: var(--warn-soft); border-color: var(--warn-edge-2); font-weight: 600; }
 
 .cat {
   display: inline-block;

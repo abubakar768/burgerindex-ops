@@ -19,7 +19,7 @@ export interface Cron {
   raw: string;
 }
 
-export type FrequencyGroup = 'daily' | 'weekly' | 'tri-weekly' | 'monthly' | 'other';
+export type FrequencyGroup = 'daily' | 'every-few-days' | 'weekly' | 'tri-weekly' | 'monthly' | 'other';
 
 export interface Frequency {
   label: string;
@@ -138,7 +138,16 @@ export function frequency(cron: Cron | null): Frequency {
 
   if (cron.minute.any) return { label: 'Every minute', group: 'other' };
   if (cron.hour.any && cron.dow.any && cron.dom.any) return { label: 'Hourly', group: 'other' };
-  if (!cron.dom.any) return { label: 'Monthly', group: 'monthly' };
+  if (!cron.dom.any) {
+    // The scheduler fakes "every N days" and some weeklies with day-of-month
+    // lists (every_3_days = 1,4,7,...,28; weekly_3am = 1,7,14,21,28), so the
+    // count of days is what says how often it runs, not the field it is in.
+    const n = cron.dom.values.length;
+    if (n === 1) return { label: 'Monthly', group: 'monthly' };
+    if (n === 2) return { label: 'Twice monthly', group: 'monthly' };
+    if (n <= 6) return { label: 'Weekly', group: 'weekly' };
+    return { label: `Every ${Math.round(30 / n)} days`, group: 'every-few-days' };
+  }
 
   if (!cron.dow.any && cron.dow.values.length < 7) {
     const days = cron.dow.values.length;
@@ -168,7 +177,12 @@ export function timeLabel(cron: Cron | null): string {
   const dayPart = cron.dow.any || cron.dow.values.length === 7
     ? ''
     : `${cron.dow.values.map((d) => DOW_NAMES[d]).join(', ')} `;
-  const domPart = cron.dom.any ? '' : `day ${cron.dom.values.join(', ')} `;
+  const dom = cron.dom.values;
+  const domPart = cron.dom.any
+    ? ''
+    : dom.length > 4
+      ? `days ${dom[0]}, ${dom[1]} … ${dom[dom.length - 1]} · `
+      : `day ${dom.join(', ')} · `;
 
   return `${domPart}${dayPart}${times.join(', ')}`.trim();
 }

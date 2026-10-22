@@ -138,6 +138,7 @@ export function Tag({ children, variant }: { children: ReactNode; variant?: stri
     srcManual: s.srcManual,
     envStaging: s.envStaging,
     muted: s.muted,
+    warn: s.tagWarn,
   };
   return <span className={cx(s.tag, variant ? map[variant] : undefined)}>{children}</span>;
 }
