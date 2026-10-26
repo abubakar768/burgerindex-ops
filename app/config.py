@@ -44,6 +44,10 @@ class Settings(BaseSettings):
 
     # Worker + auto-fix
     REDIS_URL: str = "redis://localhost:6379/3"
+    # False on a machine whose worker has no Claude login (the VM, for now):
+    # Fix and Approve refuse up front instead of queuing a run that creates an
+    # autofix branch and then fails on `claude`. Autofix runs from a Mac instead.
+    AUTOFIX_ENABLED: bool = True
     AUTOFIX_REPO: str = ""                  # defaults to CRAWLERS_DIR; a separate clone is safer
     AUTOFIX_WORK: str = "/var/autofix"
     GITLAB_URL: str = "https://gitlab.com"

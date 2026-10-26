@@ -51,6 +51,19 @@ def test_claude_gets_a_scrapy_that_cannot_store(monkeypatch, tmp_path):
     assert testing == "True"
 
 
+def test_claude_never_sees_an_api_key(calls, monkeypatch, tmp_path):
+    """A stray API key would bill autofix as API credits instead of the subscription."""
+    monkeypatch.setattr(pipeline, "WORK_ROOT", str(tmp_path))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "test")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oauth-test")
+    with pytest.raises(json.JSONDecodeError):  # fake_sh returns no output
+        pipeline.run_claude("p", str(tmp_path))
+    env = calls[0]["env"]
+    assert "ANTHROPIC_API_KEY" not in env and "ANTHROPIC_AUTH_TOKEN" not in env
+    assert env["CLAUDE_CODE_OAUTH_TOKEN"] == "oauth-test"
+
+
 def test_approve_refuses_before_pushing_without_gitlab(calls, monkeypatch, tmp_path):
     monkeypatch.delenv("GITLAB_PROJECT_ID", raising=False)
     monkeypatch.delenv("GITLAB_TOKEN", raising=False)
