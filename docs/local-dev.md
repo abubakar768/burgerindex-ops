@@ -190,6 +190,58 @@ Ctrl-C stops the API and the worker; crawls you started keep going until their
 
 Audit entries go to `~/.burgerindex-ops-local/audit.jsonl`.
 
+## Auto-fix from a Mac, everything else on the VM
+
+This is how auto-fix runs for now. Claude runs on a Claude subscription, not
+API credits, and the VM worker has no Claude login. So the VM's `.env` sets
+`AUTOFIX_ENABLED=false`: Live, Schedules, Run/Stop, Issues and P0 watch work
+there as usual, and Fix answers "Auto-fix is turned off on this server". Fixes
+run from this local stack instead.
+
+1. Log `claude` in to your subscription, and make sure no API key is in the
+   way. Autofix strips `ANTHROPIC_API_KEY` before starting Claude, so a key
+   cannot bill it, but your own `claude` sessions would still use one.
+
+   ```bash
+   claude login
+   ```
+
+2. Bring the autofix mirror up to the crawlers' latest `master`, so the fix
+   branches from what production runs:
+
+   ```bash
+   git -C ~/Desktop/burgerindex_projects/crawlers fetch origin master && git -C ~/.burgerindex-ops-local/crawlers-origin.git fetch ~/Desktop/burgerindex_projects/crawlers origin/master:master
+   ```
+
+3. Start the stack with `scripts/local/up.sh`, open
+   http://localhost:8090/issues/ and click Fix on a fixable row. Issues reads
+   the same `DASHBOARD_API` as the VM, so it lists the same failures.
+
+What differs from a fix on the VM:
+
+- **Evidence.** The saved responses and log tail of a failed crawl are written
+  on the VM, under `/var/crawler-evidence`. A Mac can only read them when the
+  evidence extension uploads to S3 (`evidence/path` is then `s3://...`) and
+  your AWS credentials can read that bucket. Otherwise Claude is told "no
+  evidence folder saved for this run" and works from the job's stats alone,
+  which gives weaker diagnoses.
+- **Approve.** Locally it refuses (no GitLab settings), and a push would only
+  reach the mirror anyway. When a fix is ready, review the diff on `/fix/`,
+  then push its branch to GitLab yourself and open the MR there. The worktree
+  path and branch are in the report:
+
+  ```bash
+  git -C ~/.burgerindex-ops-local/autofix-work/<crawler>-<stamp> push git@gitlab.com:b1119/crawlers.git autofix/<crawler>-<stamp>
+  ```
+
+- **Usage limits.** Each fix is up to 3 Claude sessions on your subscription.
+  When a limit is reached, Fix fails until it resets; nothing is charged.
+
+To move auto-fix onto the VM later: clone `crawlers-autofix` there (see the
+README), put a `claude setup-token` token in its `.env` as
+`CLAUDE_CODE_OAUTH_TOKEN`, set `AUTOFIX_ENABLED=true` and restart the API and
+worker.
+
 ## When something looks wrong
 
 - **The first page load takes 10–30 s.** That is `scrapy list` building the

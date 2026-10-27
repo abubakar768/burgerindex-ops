@@ -69,6 +69,14 @@ sudo systemctl daemon-reload && sudo systemctl enable --now burgerindex-ops-api 
 ```
 Both units use `KillMode=process`, so restarting burgerindex-ops never kills running crawls.
 
+Auto-fix is off on the VM for now (`AUTOFIX_ENABLED=false`): the VM worker has
+no Claude login, and Claude runs on a subscription rather than API credits. The
+VM serves Live, Schedules, Run/Stop, Issues and P0 watch; Fix and Approve there
+answer 503. Fixes run from a Mac's local stack, see
+[docs/local-dev.md](docs/local-dev.md#auto-fix-from-a-mac-everything-else-on-the-vm).
+The `crawlers-autofix` clone and the worker's Claude login are only needed once
+it moves to the VM.
+
 ## Endpoints
 
 All live under `/api` and need `Authorization: Bearer <API_TOKEN>`.
@@ -85,9 +93,9 @@ The root is the dashboard; `/health` is unauthenticated and stays there.
 | GET | `/api/schedules` | scheduler's schedules + running PID |
 | POST | `/api/schedules/{spider}/run` | `{user}`; refuses unknown or already running spiders |
 | GET | `/api/issues?days=7` | classified failures, worst first (`/triage` still works, deprecated) |
-| POST | `/api/autofix` | `{job_id, user}` queues a fix |
+| POST | `/api/autofix` | `{job_id, user}` queues a fix; 503 when `AUTOFIX_ENABLED=false` |
 | GET | `/api/autofix/{task_id}` | fix status + report |
-| POST | `/api/autofix/approve` | `{report_path, user}` opens the GitLab MR |
+| POST | `/api/autofix/approve` | `{report_path, user}` opens the GitLab MR; 503 when `AUTOFIX_ENABLED=false` |
 
 Stop, Run, auto-fix and Approve are written to `AUDIT_LOG`.
 

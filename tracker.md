@@ -15,7 +15,7 @@ _Nothing claimed. Add a line here when you pick something up._
 | 2 | Verify `/api/schedules` against the live scheduler DB | `SCHEDULES_SQL` is written in `.env.example`; confirm with `python scripts/check_schedules.py` |
 | 3 | Deploy on burgerindex-vm | systemd units in `deploy/`; check `/api/crawlers` shows today's runs and `/` opens the dashboard |
 | 4 | Open the crawlers repo PR from `crawlers_patch/` | heartbeat + evidence extensions, memory limits, log files — the Live page's heartbeat and P0 columns depend on it |
-| 5 | Exercise auto-fix end to end on the VM | needs git, scrapy, the `crawlers-autofix` clone and the Claude Code CLI on the worker |
+| 5 | Exercise auto-fix end to end from a Mac | runs on a Claude subscription, not API credits, so it stays off the VM (`AUTOFIX_ENABLED=false`) for now; see docs/local-dev.md. Moving it to the VM later needs the `crawlers-autofix` clone and `CLAUDE_CODE_OAUTH_TOKEN` there |
 | 6 | Decide on tagging scheduler launches `CRAWL_SOURCE=scheduler` | would let the Live page tell scheduled from manual runs; a change in the scheduler repo |
 
 ## Known gaps

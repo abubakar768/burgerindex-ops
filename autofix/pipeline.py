@@ -8,7 +8,8 @@ dashboard shows (root cause, diff, test stats, sample items). `approve` pushes
 the branch and opens a GitLab MR. Merge/deploy stays with your normal process.
 
 Needs on the worker machine: git, scrapy, the crawlers repo, and the Claude Code
-CLI (`claude`) with an API key configured.
+CLI (`claude`) logged in to a Claude subscription: `claude login` on a Mac, or
+CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) in .env on the VM.
 """
 from __future__ import annotations
 
@@ -37,6 +38,10 @@ TEST_SETTINGS = ["-s", "CLOSESPIDER_ITEMCOUNT=50", "-s", "CLOSESPIDER_TIMEOUT=60
 # cleaning pipelines, so fill rates can read slightly differently from prod.
 SAFE_SETTINGS = ["-s", "ITEM_PIPELINES={}", "-s", "TESTING=True"]
 CLAUDE_TOOLS = "Read,Edit,Grep,Glob,Bash(scrapy crawl:*),Bash(scrapy parse:*),Bash(python -c:*)"
+# `claude` prefers these over a subscription login and bills them as API credits.
+# One left in a shell profile or .env would silently switch autofix to paid
+# usage, so they never reach the Claude session.
+API_BILLED_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
 
 
 def sh(cmd: list[str], cwd: str | None = None, timeout: int = 900,
@@ -147,10 +152,17 @@ Instructions:
 """
 
 
+def claude_env() -> dict:
+    env = safe_scrapy_env()
+    for name in API_BILLED_VARS:
+        env.pop(name, None)
+    return env
+
+
 def run_claude(prompt: str, cwd: str) -> dict:
     p = sh(["claude", "-p", prompt, "--output-format", "json",
             "--allowedTools", CLAUDE_TOOLS, "--permission-mode", "acceptEdits"],
-           cwd=cwd, timeout=1800, env=safe_scrapy_env())
+           cwd=cwd, timeout=1800, env=claude_env())
     if p.returncode != 0:
         raise RuntimeError(f"claude failed: {p.stderr[-2000:]}")
     out = json.loads(p.stdout)

@@ -138,6 +138,18 @@ def test_autofix_registry_uses_crawlers_repo(client):
     assert reg["slow-uae-crawl"]["repo"] == f"{ROOT}/crawlers"
 
 
+def test_autofix_refused_when_disabled(client, monkeypatch):
+    """The VM has no Claude login: Fix must refuse before queuing or fetching jobs."""
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "AUTOFIX_ENABLED", False)
+    r = client.post("/api/autofix", json={"job_id": "j1", "user": "tester"})
+    assert r.status_code == 503 and "AUTOFIX_ENABLED" in r.json()["detail"]
+    r = client.post("/api/autofix/approve",
+                    json={"report_path": f"{settings.AUTOFIX_WORK}/x/report.json", "user": "tester"})
+    assert r.status_code == 503
+
+
 def test_issues_endpoint_and_deprecated_alias(client):
     """The endpoint was renamed /triage -> /issues; the old path still answers.
 

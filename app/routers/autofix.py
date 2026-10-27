@@ -12,6 +12,15 @@ from ..services.audit import audit
 router = APIRouter(tags=["autofix"])
 
 
+DISABLED = ("Auto-fix is turned off on this server (AUTOFIX_ENABLED=false). "
+            "Run it from a developer machine: see docs/local-dev.md.")
+
+
+def require_enabled() -> None:
+    if not settings.AUTOFIX_ENABLED:
+        raise HTTPException(503, DISABLED)
+
+
 class FixBody(BaseModel):
     job_id: str
     user: str
@@ -21,6 +30,7 @@ class FixBody(BaseModel):
 def start(body: FixBody):
     from worker.tasks import run_autofix
 
+    require_enabled()
     job = next((j for j in fetch_jobs(settings.DASHBOARD_API, 14) if j.get("jobId") == body.job_id), None)
     if not job:
         raise HTTPException(404, "job not found in the last 14 days")
@@ -48,6 +58,7 @@ class ApproveBody(BaseModel):
 def approve(body: ApproveBody):
     from autofix.pipeline import approve as do_approve
 
+    require_enabled()
     if not body.report_path.startswith(settings.AUTOFIX_WORK):
         raise HTTPException(400, "report must be inside AUTOFIX_WORK")
     result = do_approve(body.report_path)
