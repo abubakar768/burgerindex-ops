@@ -9,7 +9,7 @@ import {
   type Session,
 } from '@/lib/session';
 import { DEFAULT_THEME, applyTheme, readTheme, writeTheme, type Theme } from '@/lib/theme';
-import { cx } from './Primitives';
+import { Icon, cx } from './Primitives';
 import s from './ui.module.css';
 
 /* --------------------------------------------------------------- session -- */
@@ -110,7 +110,13 @@ export function Providers({ children }: { children: ReactNode }) {
     seq.current += 1;
     const id = seq.current;
     setToasts((list) => [...list, { id, kind, message }]);
-    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), 6000);
+    // Errors stay longer: they are often the reason something did not happen,
+    // and a long API message cannot be read in a few seconds.
+    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), kind === 'err' ? 12_000 : 6000);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts((list) => list.filter((t) => t.id !== id));
   }, []);
 
   const sessionValue = useMemo(
@@ -131,7 +137,15 @@ export function Providers({ children }: { children: ReactNode }) {
               key={t.id}
               className={cx(s.toast, t.kind === 'err' && s.toastErr, t.kind === 'ok' && s.toastOk)}
             >
-              {t.message}
+              <span className={s.toastText}>{t.message}</span>
+              <button
+                type="button"
+                className={s.toastClose}
+                onClick={() => dismissToast(t.id)}
+                aria-label="Dismiss"
+              >
+                <Icon name="cross" size={14} />
+              </button>
             </div>
           ))}
         </div>

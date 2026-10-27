@@ -73,11 +73,15 @@ export function Gate() {
             className={s.input}
             type="password"
             value={token}
-            autoComplete="off"
+            // Lets a password manager keep the token instead of it being retyped
+            // from .env on every sign-in.
+            autoComplete="current-password"
             onChange={(e) => setToken(e.target.value)}
             placeholder="API_TOKEN"
+            aria-describedby={error ? 'gate-token-hint gate-error' : 'gate-token-hint'}
+            aria-invalid={error ? true : undefined}
           />
-          <div className={s.gateHint}>
+          <div id="gate-token-hint" className={s.gateHint}>
             The value of <code>API_TOKEN</code> in the ops <code>.env</code>. Stored in this
             browser only, and sent as a bearer token.
           </div>
@@ -93,8 +97,9 @@ export function Gate() {
             autoComplete="username"
             onChange={(e) => setUser(e.target.value)}
             placeholder="abubakar"
+            aria-describedby="gate-user-hint"
           />
-          <div className={s.gateHint}>
+          <div id="gate-user-hint" className={s.gateHint}>
             Recorded in the audit log against every Stop, Run and Approve you make.
           </div>
         </div>
@@ -108,14 +113,15 @@ export function Gate() {
             value={base}
             onChange={(e) => setBase(e.target.value)}
             placeholder="leave empty for this origin"
+            aria-describedby="gate-base-hint"
           />
-          <div className={s.gateHint}>
+          <div id="gate-base-hint" className={s.gateHint}>
             Empty means the API that served this page. Set it only when running the
             Next.js dev server separately, e.g. <code>http://localhost:8090</code>.
           </div>
         </div>
 
-        {error ? <div className={s.gateErr}>{error}</div> : null}
+        {error ? <div id="gate-error" className={s.gateErr} role="alert">{error}</div> : null}
 
         <Button type="submit" tone="primary" size="xl" block disabled={checking}>
           {checking ? 'Checking…' : 'Continue'}

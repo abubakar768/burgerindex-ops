@@ -346,6 +346,7 @@ function CrawlerRow({
       <CellStack>
         <span className={cx(s.ramLabel, hot ? s.ramHot : s.ramOk)}>
           {limit ? `${mb(crawler.rss_mb)} of ${mb(limit)} MB` : `${mb(crawler.rss_mb)} MB`}
+          {hot ? ` · ${ramPct}%` : ''}
         </span>
         {limit ? (
           <Meter percent={ramPct ?? 0} color={hot ? 'var(--warn)' : 'var(--ok)'} small />
@@ -358,6 +359,7 @@ function CrawlerRow({
       <span className={cell.mono}>{hb ? int(hb.requests) : '—'}</span>
       <span className={stale ? s.hbStale : s.hbFresh}>
         {hb ? ago(hb.age_seconds) : 'no heartbeat'}
+        {stale ? ' · stale' : ''}
       </span>
     </SelectableRow>
   );

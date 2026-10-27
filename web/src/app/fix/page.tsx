@@ -11,7 +11,7 @@ import type { FixReport, TaskStatus } from '@/lib/types';
 import { useSession, useToast } from '@/components/Providers';
 import { PageHeader } from '@/components/PageHeader';
 import {
-  Button, CategoryChip, Check, EmptyState, Icon, NavButton, Pill, Section, cx, ui,
+  Button, CategoryChip, Check, ConfirmBar, EmptyState, Icon, NavButton, Pill, Section, cx, ui,
 } from '@/components/Primitives';
 import s from './fix.module.css';
 
@@ -61,6 +61,7 @@ function FixTask({ taskId }: { taskId: string }) {
   const [approving, setApproving] = useState(false);
   const [mrUrl, setMrUrl] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [confirmRetry, setConfirmRetry] = useState(false);
 
   const [settled, setSettled] = useState(false);
 
@@ -103,6 +104,7 @@ function FixTask({ taskId }: { taskId: string }) {
     } catch (cause) {
       toast(`Retry failed: ${(cause as Error).message}`);
       setRetrying(false);
+      setConfirmRetry(false);
     }
   }, [report, session.user, toast, router]);
 
@@ -174,6 +176,26 @@ function FixTask({ taskId }: { taskId: string }) {
     );
   }
 
+  const retryPrompt = confirmRetry ? (
+    <ConfirmBar
+      title={(
+        <>
+          Run another auto-fix for{' '}
+          <span className={ui.mono} style={{ fontWeight: 500 }}>{report.crawler}</span>?
+        </>
+      )}
+      detail={
+        'A fresh branch and up to 3 more Claude Code attempts, each with its own test crawl, '
+        + "on the worker's Claude account. This branch and report stay where they are."
+      }
+      confirmLabel="Start retry"
+      busyLabel="Queueing…"
+      busy={retrying}
+      onConfirm={retry}
+      onCancel={() => setConfirmRetry(false)}
+    />
+  ) : null;
+
   return (
     <ReadyView
       report={report}
@@ -181,8 +203,9 @@ function FixTask({ taskId }: { taskId: string }) {
       approving={approving}
       retrying={retrying}
       mrUrl={mrUrl}
+      retryPrompt={retryPrompt}
       onApprove={approve}
-      onRetry={retry}
+      onRetry={() => setConfirmRetry(true)}
       onReject={reject}
     />
   );
@@ -234,13 +257,15 @@ function Working({
 /* --------------------------------------------------------------- ready -- */
 
 function ReadyView({
-  report, back, approving, retrying, mrUrl, onApprove, onRetry, onReject,
+  report, back, approving, retrying, mrUrl, retryPrompt, onApprove, onRetry, onReject,
 }: {
   report: FixReport;
   back: React.ReactNode;
   approving: boolean;
   retrying: boolean;
   mrUrl: string | null;
+  /** The retry confirmation, shown under the header while it is open. */
+  retryPrompt: React.ReactNode;
   onApprove: () => void;
   onRetry: () => void;
   onReject: () => void;
@@ -279,6 +304,8 @@ function ReadyView({
           </>
         )}
       />
+
+      {retryPrompt}
 
       <div className={ui.split}>
         <div className={cx(ui.splitMain, ui.splitCol)} style={{ display: 'flex' }}>
@@ -352,7 +379,8 @@ function ReadyView({
             note={`${report.test.items} items`}
           >
             <div className={s.actionNote}>
-              50-item limit, same settings as production
+              50-item limit, production settings with storage switched off: nothing is
+              written to the database or S3
             </div>
             <div className={ui.checks}>
               {checks.map((c) => (

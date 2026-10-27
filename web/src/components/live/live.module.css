@@ -46,7 +46,7 @@
 .miniGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .mini { padding: 12px; border-radius: var(--radius-ctl); background: var(--raised); }
 .miniKey { font-size: 12px; color: var(--ink-3); }
-.miniValue { font-size: 18px; font-weight: 700; }
+.miniValue { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------------ stop -- */
 .stopBox {
