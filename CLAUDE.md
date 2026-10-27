@@ -68,3 +68,8 @@ source venv/bin/activate && pytest -q
 
 `python scripts/check_schedules.py` verifies `SCHEDULES_SQL` against the real
 scheduler database.
+
+<!-- switchboard: learned rules (edit freely) -->
+## Learned rules
+- Don't want to spend the money on it.
+<!-- end switchboard -->
