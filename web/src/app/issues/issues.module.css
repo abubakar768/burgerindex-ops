@@ -1,14 +1,13 @@
 .streakHot { color: var(--warn); font-weight: 700; }
 .streakCalm { color: var(--ink-2); }
 
+/* Wraps instead of clamping: the evidence is what lets a human check the
+   classification, and a clamp hid the rest behind a hover-only tooltip. */
 .evidence {
   color: var(--ink-3);
   font-size: 13px;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-clamp: 2;
+  line-height: 19px;
+  overflow-wrap: anywhere;
 }
 
 /* Non-fixable rows name an action the API cannot perform yet, so it reads as a
@@ -30,7 +29,7 @@
 }
 
 .manualHint {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;

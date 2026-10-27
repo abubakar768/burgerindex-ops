@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
 import s from './ui.module.css';
 
@@ -217,6 +217,66 @@ export function Banner({
       {icon ? <Icon name={icon} stroke={strokes[tone]} /> : null}
       <div className={s.bannerTitle}>{title}</div>
       {detail ? <div className={s.bannerDetail}>{detail}</div> : null}
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------- confirm bar -- */
+
+/**
+ * The inline confirmation every Run, Fix and Retry goes through. It sits above
+ * the table, so a click on a row far down used to open it off-screen and look
+ * like nothing happened: it scrolls itself into view and takes focus, and
+ * Escape cancels.
+ */
+export function ConfirmBar({
+  title, detail, note, confirmLabel, busyLabel, busy, onConfirm, onCancel,
+}: {
+  title: ReactNode;
+  detail: ReactNode;
+  /** An extra warning line, e.g. for a P0 crawler. */
+  note?: ReactNode;
+  confirmLabel: string;
+  busyLabel: string;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // Instant, not smooth: a smooth scroll is driven by animation frames and
+    // never moved in a backgrounded tab, leaving the bar off-screen.
+    ref.current?.scrollIntoView({ block: 'nearest' });
+    confirmRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={s.confirm}
+      role="group"
+      aria-label="Confirm action"
+      onKeyDown={(e) => { if (e.key === 'Escape' && !busy) onCancel(); }}
+    >
+      <div className={s.confirmLeft}>
+        <div className={s.confirmTitle}>{title}</div>
+        <div className={s.confirmDetail}>{detail}</div>
+        {note ? <div className={s.confirmP0}>{note}</div> : null}
+      </div>
+      <div className={s.confirmRight}>
+        <button
+          ref={confirmRef}
+          type="button"
+          className={cx(s.btn, s.primary, s.lg)}
+          disabled={busy}
+          onClick={onConfirm}
+        >
+          {busy ? busyLabel : confirmLabel}
+        </button>
+        <Button tone="ghost" size="lg" onClick={onCancel} disabled={busy}>Cancel</Button>
+      </div>
     </div>
   );
 }

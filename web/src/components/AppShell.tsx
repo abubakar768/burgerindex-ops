@@ -23,8 +23,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={shell.shell}>
+      <a href="#content" className="skipLink">Skip to content</a>
       <Sidebar />
-      <main className={shell.main}>
+      <main id="content" tabIndex={-1} className={shell.main}>
         <div className={s.page}>{children}</div>
       </main>
     </div>

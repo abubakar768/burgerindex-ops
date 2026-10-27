@@ -9,7 +9,7 @@ import type { TriageRow } from '@/lib/types';
 import { useSession, useToast } from '@/components/Providers';
 import { PageHeader } from '@/components/PageHeader';
 import {
-  Banner, Button, CategoryChip, EmptyState, FilterButton, Pill, StatCard, ui,
+  Banner, Button, CategoryChip, ConfirmBar, EmptyState, FilterButton, Pill, StatCard, ui,
 } from '@/components/Primitives';
 import { HeaderRow, Row, SkeletonRows, Table, TableFoot, cell } from '@/components/Table';
 import s from './issues.module.css';
@@ -27,6 +27,9 @@ export default function IssuesPage() {
 
   const [filter, setFilter] = useState<Filter>('all');
   const [queueing, setQueueing] = useState<string | null>(null);
+  // Fix bills a Claude account and runs test crawls, so it is confirmed first
+  // like Run is.
+  const [pendingFix, setPendingFix] = useState<TriageRow | null>(null);
 
   const issues = usePoll((signal) => api.issues(DAYS, signal), REFRESH_MS);
   const spiders = usePoll((signal) => api.spiders(signal), 0);
@@ -75,6 +78,7 @@ export default function IssuesPage() {
         ? (err.detail ?? 'That job is no longer in the last 14 days.')
         : `Could not queue the fix: ${err.message}`);
       setQueueing(null);
+      setPendingFix(null);
     }
   }, [session.user, toast, router]);
 
@@ -133,6 +137,29 @@ export default function IssuesPage() {
 
       {p0Banner}
 
+      {pendingFix ? (
+        <ConfirmBar
+          key={pendingFix.jobId ?? pendingFix.crawler}
+          title={(
+            <>
+              Start an auto-fix for{' '}
+              <span className={ui.mono} style={{ fontWeight: 500 }}>{pendingFix.crawler}</span>?
+            </>
+          )}
+          detail={
+            'The worker runs Claude Code on a fresh branch of the crawlers repo: up to 3 '
+            + 'attempts, each checked by a 50-item test crawl with storage switched off. It uses '
+            + "the worker's Claude account and can take a while. Nothing is pushed until someone "
+            + 'approves the result.'
+          }
+          confirmLabel="Start fix"
+          busyLabel="Queueing…"
+          busy={queueing !== null}
+          onConfirm={() => startFix(pendingFix)}
+          onCancel={() => setPendingFix(null)}
+        />
+      ) : null}
+
       <div className={ui.gridStats}>
         <StatCard
           label="FAILED"
@@ -189,7 +216,7 @@ export default function IssuesPage() {
               key={`${row.crawler}-${row.jobId ?? row.category}`}
               row={row}
               busy={queueing !== null && queueing === row.jobId}
-              onFix={() => startFix(row)}
+              onFix={() => setPendingFix(row)}
             />
           ))
         )}
@@ -220,7 +247,7 @@ function IssueRow({
 
       <div className={hotStreak ? s.streakHot : s.streakCalm}>{streakLabel(row.streak)}</div>
 
-      <div className={s.evidence} title={row.evidence?.join(' · ')}>
+      <div className={s.evidence}>
         {row.evidence?.join(' · ') || '—'}
       </div>
 

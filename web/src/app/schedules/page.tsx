@@ -10,7 +10,7 @@ import type { Schedule, Spider, TriageRow } from '@/lib/types';
 import { useSession, useToast } from '@/components/Providers';
 import { PageHeader } from '@/components/PageHeader';
 import {
-  Button, EmptyState, FilterButton, Pill, Tag, ui,
+  Button, ConfirmBar, EmptyState, FilterButton, Pill, Tag, ui,
 } from '@/components/Primitives';
 import { HeaderRow, Row, SkeletonRows, Table, TableFoot, cell } from '@/components/Table';
 import s from './schedules.module.css';
@@ -217,38 +217,34 @@ export default function SchedulesPage() {
       />
 
       {pending ? (
-        <div className={ui.confirm}>
-          <div className={ui.confirmLeft}>
-            <div className={ui.confirmTitle}>
-              Run <span className={ui.mono} style={{ fontWeight: 500 }}>
-                {pending.spider}
-              </span>{' '}now?
-            </div>
-            <div className={ui.confirmDetail}>
+        <ConfirmBar
+          key={pending.spider}
+          title={(
+            <>
+              Run <span className={ui.mono} style={{ fontWeight: 500 }}>{pending.spider}</span> now?
+            </>
+          )}
+          detail={(
+            <>
               {pending.next === null
                 ? `Starts on prod as a one-off dashboard run by ${session.user}. This spider has no schedule, so nothing runs it again afterwards.`
                 : `Starts on prod as a dashboard run by ${session.user}. Its next scheduled run (${pending.next ? utcStamp(pending.next.toISOString()) : 'unknown'}) stays as is.`}
-            </div>
-            {pending.args ? (
-              <div className={ui.confirmDetail}>
-                Runs without this schedule&apos;s arguments (
-                <span className={ui.mono}>{pending.args}</span>), so it does what the spider
-                does by default.
-              </div>
-            ) : null}
-            {pending.p0 ? (
-              <div className={ui.confirmP0}>
-                P0 crawler: this adds a run on top of today&apos;s scheduled one.
-              </div>
-            ) : null}
-          </div>
-          <div className={ui.confirmRight}>
-            <Button tone="primary" size="lg" disabled={running} onClick={confirmRun}>
-              {running ? 'Starting…' : 'Run now'}
-            </Button>
-            <Button tone="ghost" size="lg" onClick={() => setPending(null)}>Cancel</Button>
-          </div>
-        </div>
+              {pending.args ? (
+                <>
+                  {' '}Runs without this schedule&apos;s arguments (
+                  <span className={ui.mono}>{pending.args}</span>), so it does what the spider
+                  does by default.
+                </>
+              ) : null}
+            </>
+          )}
+          note={pending.p0 ? 'P0 crawler: this adds a run on top of today\'s scheduled one.' : undefined}
+          confirmLabel="Run now"
+          busyLabel="Starting…"
+          busy={running}
+          onConfirm={confirmRun}
+          onCancel={() => setPending(null)}
+        />
       ) : null}
 
       {view === 'scheduled' ? (
